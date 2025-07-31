@@ -1,0 +1,4 @@
+node_modules/
+*.log
+/replays/
+.DS_Store

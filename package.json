@@ -1,0 +1,24 @@
+{
+  "type": "module",
+  "name": "ffb-timer-stats",
+  "version": "1.0.0",
+  "description": "This module parses **FUMBBL FFB replays** (JSON command streams) to extract and analyze **turn-by-turn timing**, drive structure, and coach statistics for Blood Bowl games.",
+  "main": "downloadReplay.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lz-string": "^1.5.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "eslint": "^9.32.0",
+    "eslint-plugin-prettier": "^5.5.3",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2"
+  }
+}
