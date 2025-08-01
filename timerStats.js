@@ -9,7 +9,7 @@ import { StatsModel } from './StatsModel.js';
 import { printStats } from './statsPrinter.js';
 import { pathToFileURL } from 'url';
 
-async function ensureReplayDownloaded(replayId, gzPath) {
+async function fetchReplayGz(replayId, gzPath) {
   if (fs.existsSync(gzPath)) return;
 
   const url = `https://fumbbl.com/api/replay/get/${replayId}/gz`;
@@ -60,7 +60,7 @@ export async function timerStats(replayId) {
     fs.mkdirSync(path.dirname(replayGz), { recursive: true });
   }
 
-  await ensureReplayDownloaded(replayId, replayGz);
+  await fetchReplayGz(replayId, replayGz);
   const replayJson = await loadReplayJson(replayGz);
 
   if (!replayJson) {
@@ -106,7 +106,7 @@ export async function timerStats(replayId) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   // Only runs if this file is executed directly, not imported
-  const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1668072';
+  const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830374';
   const match = gameLink.match(/replay=(\d+)/);
   if (!match) {
     console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
