@@ -114,4 +114,21 @@ export class StatsModel {
       (turn) => (turn.turnTime || 0) > turnLimitMs,
     ).length;
   }
+
+  toJSON() {
+    return {
+      homeCoach: this.homeCoach,
+      awayCoach: this.awayCoach,
+      firstHalf: this.firstHalf.toJSON(),
+      secondHalf: this.secondHalf.toJSON(),
+      overtime: this.overtime.toJSON(),
+
+      totalTimeHome: this.getTotalTimeHome(),
+      totalTimeAway: this.getTotalTimeAway(),
+      averageTurnTimeHome: this.getAverageTurnTimeHome(),
+      averageTurnTimeAway: this.getAverageTurnTimeAway(),
+      medianTurnTimeHome: this.getMedianTurnTimeHome(),
+      medianTurnTimeAway: this.getMedianTurnTimeAway(),
+    };
+  }
 }

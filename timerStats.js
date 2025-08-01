@@ -102,6 +102,10 @@ export async function timerStats(replayId) {
   console.log(`Finished processing ${commands.length} commands.`);
   console.log(`Finished processing replay ${replayId}`);
   printStats(statsModel);
+
+  /* const json = JSON.stringify(statsModel, null, 2); 
+  fs.writeFileSync('stats.json', json, 'utf8');
+  console.log('json :>> ', json); */
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
