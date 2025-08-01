@@ -107,7 +107,7 @@ export async function timerStats(replayId) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830374';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1828068';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -116,7 +116,10 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const replayId = match[1];
 
     try {
+      const start = performance.now();
       const json = await timerStats(replayId);
+      const end = performance.now();
+      console.log(`Total timerStats execution: ${(end - start).toFixed(2)} ms`);
       //console.log('json :>> ', json);
       // fs.writeFileSync('stats.json', json, 'utf8');
     } catch (err) {
