@@ -26,7 +26,7 @@ This module parses **FUMBBL FFB replays** (official API, zipped JSON streams) to
 - **Extracts:**
   - Turn number, team (home/away), and type (`regular`, `blitz`).
   - Drive and half structure (`kickoffResult`, `startHalf`).
-  - Millisecond-precision per-turn time (from the server, not locally computed).
+  - Per-turn time (from the server, not locally computed).
 
 - **Calculates:**
   - Total time spent per team.
@@ -65,8 +65,6 @@ A new turn is only recorded when:
 
 - The **turn mode** is one of `regular` or `blitz`.
 - The turn number or mode or side is different from the last tracked turn for that team.
-
-This precisely matches the official FFBStats Java repo.
 
 ---
 
