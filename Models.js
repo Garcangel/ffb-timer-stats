@@ -4,6 +4,7 @@ export class Turn {
     this.turnMode = turnMode;
     this.number = number;
     this.turnTime = null;
+    this.timeUntilFirstAction = null;
   }
 
   toJSON() {
@@ -12,6 +13,7 @@ export class Turn {
       turnMode: this.turnMode,
       number: this.number,
       turnTime: this.turnTime,
+      timeUntilFirstAction: this.timeUntilFirstAction,
     };
   }
 }

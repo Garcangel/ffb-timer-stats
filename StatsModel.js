@@ -1,7 +1,13 @@
 import { Drive, Half, Turn } from './Models.js';
 
 export class StatsModel {
-  constructor() {
+  constructor({
+    homeCoach,
+    awayCoach,
+    turnLimitMs,
+    totalPlayerTurnsHome,
+    totalPlayerTurnsAway,
+  }) {
     this.firstHalf = new Half();
     this.secondHalf = new Half();
     this.overtime = new Half();
@@ -10,8 +16,11 @@ export class StatsModel {
     this.lastTurn = null;
     this.lastTurnHome = null;
     this.lastTurnAway = null;
-    this.homeCoach = null;
-    this.awayCoach = null;
+    this.homeCoach = homeCoach;
+    this.awayCoach = awayCoach;
+    this.turnLimitMs = turnLimitMs;
+    this.totalPlayerTurnsHome = totalPlayerTurnsHome;
+    this.totalPlayerTurnsAway = totalPlayerTurnsAway;
   }
 
   setHalf(halfNum) {
@@ -40,81 +49,79 @@ export class StatsModel {
     return this.awayCoach;
   }
 
-  getTurnsHome() {
+  // --- DRY helpers ---
+  _getTurns(team) {
     return [
       ...this.firstHalf.drives,
       ...this.secondHalf.drives,
       ...this.overtime.drives,
     ]
       .flatMap((drive) => drive.turns)
-      .filter((turn) => turn.isHomeActive === true);
-  }
-  getTurnsAway() {
-    return [
-      ...this.firstHalf.drives,
-      ...this.secondHalf.drives,
-      ...this.overtime.drives,
-    ]
-      .flatMap((drive) => drive.turns)
-      .filter((turn) => turn.isHomeActive === false);
+      .filter((turn) => turn.isHomeActive === (team === 'home'));
   }
 
-  getTotalTimeHome() {
-    return this.getTurnsHome().reduce(
-      (sum, turn) => sum + (turn.turnTime || 0),
+  _getStatArray(team, accessor) {
+    return this._getTurns(team)
+      .map(accessor)
+      .filter((v) => typeof v === 'number' && v >= 0);
+  }
+
+  _calcMean(arr) {
+    if (!arr.length) return 0;
+    return Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length);
+  }
+
+  _calcMedian(arr) {
+    if (!arr.length) return 0;
+    arr = arr.slice().sort((a, b) => a - b);
+    const mid = Math.floor(arr.length / 2);
+    return arr.length % 2 ?
+        arr[mid]
+      : Math.round((arr[mid - 1] + arr[mid]) / 2);
+  }
+
+  // --- Public stat methods ---
+  getTotalTime(team) {
+    return this._getStatArray(team, (t) => t.turnTime || 0).reduce(
+      (a, b) => a + b,
       0,
     );
   }
-  getTotalTimeAway() {
-    return this.getTurnsAway().reduce(
-      (sum, turn) => sum + (turn.turnTime || 0),
-      0,
+
+  getAverageTurnTime(team) {
+    return this._calcMean(this._getStatArray(team, (t) => t.turnTime || 0));
+  }
+
+  getMedianTurnTime(team) {
+    return this._calcMedian(this._getStatArray(team, (t) => t.turnTime || 0));
+  }
+
+  getAverageTimeUntilFirstAction(team) {
+    return this._calcMean(
+      this._getStatArray(team, (t) => t.timeUntilFirstAction),
     );
   }
 
-  getAverageTurnTimeHome() {
-    const turns = this.getTurnsHome();
-    if (!turns.length) return 0;
-    return Math.round(this.getTotalTimeHome() / turns.length);
-  }
-  getAverageTurnTimeAway() {
-    const turns = this.getTurnsAway();
-    if (!turns.length) return 0;
-    return Math.round(this.getTotalTimeAway() / turns.length);
+  getMedianTimeUntilFirstAction(team) {
+    return this._calcMedian(
+      this._getStatArray(team, (t) => t.timeUntilFirstAction),
+    );
   }
 
-  getMedianTurnTimeHome() {
-    const times = this.getTurnsHome()
-      .map((t) => t.turnTime || 0)
-      .sort((a, b) => a - b);
-    if (!times.length) return 0;
-    const mid = Math.floor(times.length / 2);
-    return times.length % 2 ?
-        times[mid]
-      : Math.round((times[mid - 1] + times[mid]) / 2);
-  }
-  getMedianTurnTimeAway() {
-    const times = this.getTurnsAway()
-      .map((t) => t.turnTime || 0)
-      .sort((a, b) => a - b);
-    if (!times.length) return 0;
-    const mid = Math.floor(times.length / 2);
-    return times.length % 2 ?
-        times[mid]
-      : Math.round((times[mid - 1] + times[mid]) / 2);
-  }
-
-  countTurnsExceededLimitHome(turnLimitMs) {
-    return this.getTurnsHome().filter(
-      (turn) => (turn.turnTime || 0) > turnLimitMs,
-    ).length;
-  }
-  countTurnsExceededLimitAway(turnLimitMs) {
-    return this.getTurnsAway().filter(
-      (turn) => (turn.turnTime || 0) > turnLimitMs,
+  countTurnsExceededLimit(team, turnLimitMs) {
+    return this._getStatArray(team, (t) => t.turnTime || 0).filter(
+      (v) => v > turnLimitMs,
     ).length;
   }
 
+  getAverageTimePerPlayerTurn(team) {
+    const totalPlayerTurns =
+      team === 'home' ? this.totalPlayerTurnsHome : this.totalPlayerTurnsAway;
+    if (!totalPlayerTurns) return 0;
+    return Math.round(this.getTotalTime(team) / totalPlayerTurns);
+  }
+
+  // --- Serialization ---
   toJSON() {
     return {
       homeCoach: this.homeCoach,
@@ -123,12 +130,24 @@ export class StatsModel {
       secondHalf: this.secondHalf.toJSON(),
       overtime: this.overtime.toJSON(),
 
-      totalTimeHome: this.getTotalTimeHome(),
-      totalTimeAway: this.getTotalTimeAway(),
-      averageTurnTimeHome: this.getAverageTurnTimeHome(),
-      averageTurnTimeAway: this.getAverageTurnTimeAway(),
-      medianTurnTimeHome: this.getMedianTurnTimeHome(),
-      medianTurnTimeAway: this.getMedianTurnTimeAway(),
+      totalTimeHome: this.getTotalTime('home'),
+      totalTimeAway: this.getTotalTime('away'),
+      averageTurnTimeHome: this.getAverageTurnTime('home'),
+      averageTurnTimeAway: this.getAverageTurnTime('away'),
+      medianTurnTimeHome: this.getMedianTurnTime('home'),
+      medianTurnTimeAway: this.getMedianTurnTime('away'),
+
+      averageTimePerPlayerTurnHome: this.getAverageTimePerPlayerTurn('home'),
+      averageTimePerPlayerTurnAway: this.getAverageTimePerPlayerTurn('away'),
+
+      averageTimeUntilFirstActionHome:
+        this.getAverageTimeUntilFirstAction('home'),
+      averageTimeUntilFirstActionAway:
+        this.getAverageTimeUntilFirstAction('away'),
+      medianTimeUntilFirstActionHome:
+        this.getMedianTimeUntilFirstAction('home'),
+      medianTimeUntilFirstActionAway:
+        this.getMedianTimeUntilFirstAction('away'),
     };
   }
 }

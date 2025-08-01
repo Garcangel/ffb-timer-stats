@@ -1,66 +1,60 @@
 export function printStats(statsModel) {
-  const halves = [
-    { label: 'First half drives/turns:', half: statsModel.firstHalf },
-    { label: 'Second half drives/turns:', half: statsModel.secondHalf },
-    { label: 'Overtime drives/turns:', half: statsModel.overtime },
+  const teams = ['home', 'away'];
+
+  const metrics = [
+    {
+      label: 'Total turns',
+      fn: (team) => statsModel._getTurns(team).length,
+    },
+    {
+      label: 'Total time used',
+      fn: (team) =>
+        `${formatMs(statsModel.getTotalTime(team), true)} (${statsModel.getTotalTime(team)}ms)`,
+    },
+    {
+      label: 'Average turn time',
+      fn: (team) =>
+        `${formatMs(statsModel.getAverageTurnTime(team), false)} (${statsModel.getAverageTurnTime(team)}ms)`,
+    },
+    {
+      label: 'Median turn time',
+      fn: (team) =>
+        `${formatMs(statsModel.getMedianTurnTime(team), false)} (${statsModel.getMedianTurnTime(team)}ms)`,
+    },
+    {
+      label: 'Turns exceeding limit',
+      fn: (team) =>
+        statsModel.countTurnsExceededLimit(team, statsModel.turnLimitMs),
+    },
+    {
+      label: 'Average time per player turn',
+      fn: (team) =>
+        `${formatMs(statsModel.getAverageTimePerPlayerTurn(team), false)} (${statsModel.getAverageTimePerPlayerTurn(team)}ms)`,
+    },
+    {
+      label: 'Average time until first action',
+      fn: (team) =>
+        `${formatMs(statsModel.getAverageTimeUntilFirstAction(team), false)} (${statsModel.getAverageTimeUntilFirstAction(team)}ms)`,
+    },
+    {
+      label: 'Median time until first action',
+      fn: (team) =>
+        `${formatMs(statsModel.getMedianTimeUntilFirstAction(team), false)} (${statsModel.getMedianTimeUntilFirstAction(team)}ms)`,
+    },
   ];
 
-  for (const { label, half } of halves) {
-    console.log(label);
-    half.drives.forEach((drive, dIdx) => {
-      drive.turns.forEach((turn, tIdx) => {
-        console.log(
-          `Drive ${dIdx + 1}, Turn ${tIdx + 1}: ` +
-            `Team: ${turn.isHomeActive ? 'Home' : 'Away'}, ` +
-            `Mode: ${turn.turnMode}, ` +
-            `Number: ${turn.number}, ` +
-            `Time: ${turn.turnTime}`,
-        );
-      });
-    });
+  // Header
+  console.log(
+    `Home Coach: ${statsModel.getCoachNameHome()} | Away Coach: ${statsModel.getCoachNameAway()}`,
+  );
+  console.log('Metric'.padEnd(34) + 'Home'.padEnd(28) + 'Away');
+
+  // Metrics
+  for (const m of metrics) {
+    const home = String(m.fn('home')).padEnd(28);
+    const away = String(m.fn('away'));
+    console.log(m.label.padEnd(34) + home + away);
   }
-
-  console.log('Home Coach:', statsModel.getCoachNameHome());
-  console.log('Away Coach:', statsModel.getCoachNameAway());
-
-  console.log('Home total turns:', statsModel.getTurnsHome().length);
-  console.log('Away total turns:', statsModel.getTurnsAway().length);
-
-  console.log(
-    'Home total time used:',
-    `${formatMs(statsModel.getTotalTimeHome(), true)} (${statsModel.getTotalTimeHome()}ms)`,
-  );
-  console.log(
-    'Away total time used:',
-    `${formatMs(statsModel.getTotalTimeAway(), true)} (${statsModel.getTotalTimeAway()}ms)`,
-  );
-
-  console.log(
-    'Home average turn time:',
-    `${formatMs(statsModel.getAverageTurnTimeHome(), false)} (${statsModel.getAverageTurnTimeHome()}ms)`,
-  );
-  console.log(
-    'Away average turn time:',
-    `${formatMs(statsModel.getAverageTurnTimeAway(), false)} (${statsModel.getAverageTurnTimeAway()}ms)`,
-  );
-
-  console.log(
-    'Home median turn time:',
-    `${formatMs(statsModel.getMedianTurnTimeHome(), false)} (${statsModel.getMedianTurnTimeHome()}ms)`,
-  );
-  console.log(
-    'Away median turn time:',
-    `${formatMs(statsModel.getMedianTurnTimeAway(), false)} (${statsModel.getMedianTurnTimeAway()}ms)`,
-  );
-
-  console.log(
-    'Home turns exceeding limit:',
-    statsModel.countTurnsExceededLimitHome(statsModel.turnLimitMs),
-  );
-  console.log(
-    'Away turns exceeding limit:',
-    statsModel.countTurnsExceededLimitAway(statsModel.turnLimitMs),
-  );
 }
 
 function formatMs(ms, withHours = true) {

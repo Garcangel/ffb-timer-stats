@@ -78,10 +78,13 @@ export async function timerStats(replayId) {
     }
 
     const miniGameState = new MiniGameState(replayJson.game);
-    const statsModel = new StatsModel();
-    statsModel.homeCoach = miniGameState.teamHomeCoach;
-    statsModel.awayCoach = miniGameState.teamAwayCoach;
-    statsModel.turnLimitMs = miniGameState.turnLimit;
+    const statsModel = new StatsModel({
+      homeCoach: miniGameState.teamHomeCoach,
+      awayCoach: miniGameState.teamAwayCoach,
+      turnLimitMs: miniGameState.turnLimit,
+      totalPlayerTurnsHome: miniGameState.totalPlayerTurnsHome,
+      totalPlayerTurnsAway: miniGameState.totalPlayerTurnsAway,
+    });
 
     const commands = [...replayJson.gameLog.commandArray];
     commands.sort((a, b) => a.commandNr - b.commandNr);
@@ -107,7 +110,7 @@ export async function timerStats(replayId) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1818878';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830374';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');

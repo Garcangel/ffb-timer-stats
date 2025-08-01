@@ -9,7 +9,7 @@ export class MiniGameState {
     this.lastTurnNumber = 0;
     this.isHomePlaying = null;
     this.lastIsHomePlaying = null;
-    this.time = { game: 0, turn: 0 };
+
     const turntimeOption = game.gameOptions?.gameOptionArray?.find(
       (opt) => opt.gameOptionId === 'turntime',
     );
@@ -17,5 +17,19 @@ export class MiniGameState {
       turntimeOption ?
         Number(turntimeOption.gameOptionValue) * 1000
       : 240 * 1000;
+
+    const playerResultsHome =
+      game.gameResult.teamResultHome.playerResults || [];
+    const playerResultsAway =
+      game.gameResult.teamResultAway.playerResults || [];
+
+    this.totalPlayerTurnsHome = playerResultsHome.reduce(
+      (sum, p) => sum + (p.turnsPlayed || 0),
+      0,
+    );
+    this.totalPlayerTurnsAway = playerResultsAway.reduce(
+      (sum, p) => sum + (p.turnsPlayed || 0),
+      0,
+    );
   }
 }

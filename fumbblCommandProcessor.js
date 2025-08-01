@@ -73,6 +73,19 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
           newAwayTurnNr = modelChangeValue;
         }
       }
+
+      if (
+        modelChangeId === 'turnDataSetTurnStarted' &&
+        modelChangeValue === true
+      ) {
+        const currentTurn =
+          statsModel.currentDrive.turns[
+            statsModel.currentDrive.turns.length - 1
+          ];
+        if (currentTurn.timeUntilFirstAction == null) {
+          currentTurn.timeUntilFirstAction = data.turnTime;
+        }
+      }
     }
 
     // ---- Only after processing all changes: check for new turn ----
