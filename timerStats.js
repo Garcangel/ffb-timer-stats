@@ -47,75 +47,81 @@ async function loadReplayJson(gzPath) {
 }
 
 export async function timerStats(replayId) {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
 
-  const replayGz = path.join(
-    __dirname,
-    './replays',
-    `replay_${replayId}.json.gz`,
-  );
-
-  if (!fs.existsSync(path.dirname(replayGz))) {
-    fs.mkdirSync(path.dirname(replayGz), { recursive: true });
-  }
-
-  await fetchReplayGz(replayId, replayGz);
-  const replayJson = await loadReplayJson(replayGz);
-
-  if (!replayJson) {
-    console.error('❌ replayJson is null or undefined');
-    process.exit(1);
-  }
-  if (!replayJson.game) {
-    console.error('❌ replayJson.game is missing or falsy');
-    process.exit(1);
-  }
-  if (!replayJson.gameLog) {
-    console.error('❌ replayJson.gameLog is missing');
-    process.exit(1);
-  }
-  if (!Array.isArray(replayJson.gameLog.commandArray)) {
-    console.error(
-      `❌ replayJson.gameLog.commandArray is not an array (type: ${typeof replayJson
-        .gameLog.commandArray})`,
+    const replayGz = path.join(
+      __dirname,
+      './replays',
+      `replay_${replayId}.json.gz`,
     );
-    process.exit(1);
+
+    if (!fs.existsSync(path.dirname(replayGz))) {
+      fs.mkdirSync(path.dirname(replayGz), { recursive: true });
+    }
+
+    await fetchReplayGz(replayId, replayGz);
+    const replayJson = await loadReplayJson(replayGz);
+
+    if (!replayJson) {
+      throw new Error('replayJson is null or undefined');
+    }
+    if (!replayJson.game) {
+      throw new Error('replayJson.game is missing or falsy');
+    }
+    if (!replayJson.gameLog) {
+      throw new Error('replayJson.gameLog is missing');
+    }
+    if (!Array.isArray(replayJson.gameLog.commandArray)) {
+      throw new Error('replayJson.gameLog.commandArray is not an array');
+    }
+
+    const miniGameState = new MiniGameState(replayJson.game);
+    const statsModel = new StatsModel();
+    statsModel.homeCoach = miniGameState.teamHomeCoach;
+    statsModel.awayCoach = miniGameState.teamAwayCoach;
+    statsModel.turnLimitMs = miniGameState.turnLimit;
+
+    const commands = [...replayJson.gameLog.commandArray];
+    commands.sort((a, b) => a.commandNr - b.commandNr);
+
+    const start = performance.now();
+    for (const command of commands) {
+      await fumbblCommandProcessor(command, miniGameState, statsModel);
+    }
+    const end = performance.now();
+    console.log(`Processing time: ${(end - start).toFixed(2)} ms`);
+
+    console.log(`Finished processing ${commands.length} commands.`);
+    console.log(`Finished processing replay ${replayId}`);
+    printStats(statsModel);
+
+    const json = JSON.stringify(statsModel, null, 2);
+    return json;
+  } catch (err) {
+    console.error('timerStats error:', err);
+    throw err;
   }
-
-  const miniGameState = new MiniGameState(replayJson.game);
-  const statsModel = new StatsModel();
-  statsModel.homeCoach = miniGameState.teamHomeCoach;
-  statsModel.awayCoach = miniGameState.teamAwayCoach;
-  statsModel.turnLimitMs = miniGameState.turnLimit;
-
-  const commands = [...replayJson.gameLog.commandArray];
-  commands.sort((a, b) => a.commandNr - b.commandNr);
-
-  const start = performance.now();
-  for (const command of commands) {
-    await fumbblCommandProcessor(command, miniGameState, statsModel);
-  }
-  const end = performance.now();
-  console.log(`Processing time: ${(end - start).toFixed(2)} ms`);
-
-  console.log(`Finished processing ${commands.length} commands.`);
-  console.log(`Finished processing replay ${replayId}`);
-  printStats(statsModel);
-
-  /* const json = JSON.stringify(statsModel, null, 2); 
-  fs.writeFileSync('stats.json', json, 'utf8');
-  console.log('json :>> ', json); */
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  // Only runs if this file is executed directly, not imported
-  const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830374';
-  const match = gameLink.match(/replay=(\d+)/);
-  if (!match) {
-    console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
-    process.exit(1);
-  }
-  const replayId = match[1];
-  timerStats(replayId);
+  (async () => {
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830374';
+    const match = gameLink.match(/replay=(\d+)/);
+    if (!match) {
+      console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
+      process.exit(1);
+    }
+    const replayId = match[1];
+
+    try {
+      const json = await timerStats(replayId);
+      //console.log('json :>> ', json);
+      // fs.writeFileSync('stats.json', json, 'utf8');
+    } catch (err) {
+      console.error('Failed to generate stats:', err);
+      process.exit(1);
+    }
+  })();
 }
