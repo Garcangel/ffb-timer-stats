@@ -2,69 +2,61 @@
 
 ## Overview
 
-This module parses **FUMBBL FFB replays** (official API, zipped JSON streams) to extract and analyze **turn-by-turn timing**, drive structure, and coach statistics for Blood Bowl games.
+This Node.js module parses **FUMBBL FFB replays** (official API, zipped JSON streams) to extract and analyze **per-turn timing**, drive structure, **passive event times**, and coach statistics for Blood Bowl games.
 
 - **Tracks every regular turn** for both teams (home and away).
-- Associates each turn with a timing value (milliseconds), drive, and half.
-- Calculates total, average, median turn times, and flags overtime/exceeded turns.
+- **Tracks passive events** (opponent dialogs, “waiting for opponent”, skill use, apothecary, etc.), with total, average, and median passive time per team.
+- Associates each turn with timing, passive events, drive, and half.
+- Calculates total, average, median, min, and max turn times, and counts overtime/exceeded turns.
 - Organizes all timing data into halves, drives, and turns.
-- This module is written for Node.js and requires Node.js to run.
+- **No manual file management required.**
 
 ---
 
 ## Replay Download & Caching
 
-- Replays are **automatically downloaded** from the FUMBBL API as `.json.gz` files and **cached** in the local `replays/` folder.
-- Files are **only downloaded if missing**; otherwise, the cached version is used.
-- Replay data is **decompressed and parsed in-memory**—no manual extraction needed.
+- Replays are **downloaded from the FUMBBL API** as `.json.gz` and **cached** in `replays/`.
+- **No duplicate downloads**; cached files are re-used.
+- Files are **decompressed and parsed in-memory**.
 
 ---
 
-## What the Module Does
+## Features & Data Extracted
 
-- **Processes:** FFB game replays (as a single zipped `.json.gz` file per replay, fetched via API).
-- **Extracts:**
-  - Turn number, team (home/away), and type (`regular`, `blitz`).
-  - Drive and half structure (`kickoffResult`, `startHalf`).
-  - Per-turn time (from the server, not locally computed).
+**Per Replay:**
 
-- **Calculates:**
-  - Total time spent per team.
-  - Average and median turn time.
-  - Number of turns exceeding the configured turn limit.
-
-- **Organizes:**
-  - Turns nested inside drives, drives inside halves.
-  - All stats and helpers accessible via a simple model.
+- Turn number, team (home/away), and turn type (`regular`, `blitz`).
+- Drive and half structure (`kickoffResult`, `startHalf`).
+- **Turn time** (from server, not computed).
+- **Passive time:** All periods during a turn where control is handed to the opponent, including skill-use dialogs and apothecary decisions.
+- **Passive event count:** Total number of passive handoffs per turn/team.
+- Turn and passive time min/max/avg/median.
+- Turns exceeding time limit.
 
 ---
 
 ## Data Flow
 
-### 1. **Input Requirements**
+### 1. Input
 
-- **No manual input required.**
-- The module expects **only** a FUMBBL replay ID or game link.
-- All file download, caching, decompression, and parsing are handled automatically.
-- Replays are stored as zipped JSON (`replay_<replayId>.json.gz`) in the local `replays/` directory.
+- **Input:** Just a FUMBBL replay ID or game link.
+- All downloading, caching, decompressing, and parsing handled automatically.
 
-### 2. **Processing Steps**
+### 2. Processing
 
 - For each `serverModelSync` command:
-  - If `reportList` includes `startHalf` or `kickoffResult`, begins a new half/drive.
-  - Scans `modelChangeList.modelChangeArray` for:
-    - `gameSetHomePlaying`, `gameSetTurnMode` (update state).
-    - `turnDataSetTurnNr` (triggers possible new turn for home/away).
+  - Processes all `reportList` entries and `modelChangeList.modelChangeArray` entries:
+    - **Half/drive updates:** `startHalf`, `kickoffResult`
+    - **Turn state:** `gameSetHomePlaying`, `gameSetTurnMode`, `turnDataSetTurnNr`
+    - **Turn timing:** Updates the latest turn’s time.
+    - **Passive events:** `gameSetDialogParameter`, `gameSetWaitingForOpponent` (tracks start/stop, assigns to team/turn).
 
-  - Updates per-turn time using `turnTime` on each command, assigning to the latest turn if value is not a regression.
-  - Strictly follows FFBStats logic for "action turns" (`regular` and `blitz`) and "isNewTurn".
+- All stats and structures organized in-memory, accessible via `StatsModel`.
 
-### 3. **Turn Tracking Logic**
+### 3. Output
 
-A new turn is only recorded when:
-
-- The **turn mode** is one of `regular` or `blitz`.
-- The turn number or mode or side is different from the last tracked turn for that team.
+- Console prints (see below).
+- Stats can be serialized to JSON.
 
 ---
 
@@ -72,89 +64,72 @@ A new turn is only recorded when:
 
 ### `MiniGameState`
 
-- Tracks current turn mode, which side is active, half, and options like `turnLimit`.
-- Extracts coach names and turn limit from the replay data.
+- Holds current side, half, turn mode, options, coach names, player-team map, and handles passive timing state.
 
 ### `StatsModel`
 
-- Holds all tracked stats:
-  - All `Half`/`Drive`/`Turn` objects for both teams.
-  - Methods to calculate per-team and per-turn statistics.
+- All stats and turn objects for both teams.
+- Methods for total, mean, median, min, max, per-turn and per-passive-event analytics.
 
-#### **Key Methods**
+### `Turn`
 
-- `.getCoachNameHome()` / `.getCoachNameAway()`
-- `.getTurnsHome()` / `.getTurnsAway()`
-- `.getTotalTimeHome()` / `.getTotalTimeAway()`
-- `.getAverageTurnTimeHome()` / `.getAverageTurnTimeAway()`
-- `.getMedianTurnTimeHome()` / `.getMedianTurnTimeAway()`
-- `.countTurnsExceededLimitHome(turnLimitMs)` / `.countTurnsExceededLimitAway(turnLimitMs)`
+- Holds all timing for the turn, including passive event count/timing.
 
 ---
 
 ## Output Example
 
-Console logs/statistics generated from the model (see demo below):
-
 ```
-Home Coach: [coach name]
-Away Coach: [coach name]
-
-Home total turns: 16
-Away total turns: 16
-
-Home total time used: 25m 41s (1541237ms)
-Away total time used: 23m 53s (1433298ms)
-
-Home average turn time: 1m 36s (96211ms)
-Away average turn time: 1m 29s (89672ms)
-
-Home median turn time: 1m 28s (88222ms)
-Away median turn time: 1m 24s (84533ms)
-
-Home turns exceeding limit: 2
-Away turns exceeding limit: 3
+Metric                            Home                        Away
+Coach                             happygrue                   BaronBucky
+Total turns                       23                          23
+Turns exceeding limit             2                           0
+Total time used                   01h05m29s                   00h36m44s
+Average turn time                 02m50s                      01m35s
+Median turn time                  02m59s                      01m37s
+Min turn time                     00m48s                      00m36s
+Max turn time                     05m14s                      03m28s
+Average time per player turn      00m15s                      00m09s
+Average time until first action   00m39s                      00m15s
+Median time until first action    00m18s                      00m08s
+Total passive time                00m41s                      00m16s
+Average passive time              00m20s                      00m08s
+Median passive time               00m19s                      00m07s
+Passive event count               2                           2
 ```
 
 ---
 
 ## How to Use
 
-1. **Configure your script:**
-   Set the FUMBBL game link or replay ID in your runner script (e.g., `timerStats.js`).
-
-2. **Run the script:**
+1. **Edit the runner script** (`timerStats.js`), set your replay link or ID.
+2. **Run:**
 
    ```sh
    node timerStats.js
    ```
 
-   - On first run, the replay will be downloaded and cached automatically.
-   - On later runs, the cached `.json.gz` will be used directly.
-
-3. **Read output/statistics:**
-   - The script processes the replay and prints statistics to the console.
-   - All decompression, parsing, and command processing are handled automatically—**no manual file management is required**.
+3. **View stats in the console or as JSON.**
 
 ---
 
-## Example File Layout
+## File Structure
 
 ```
 timerStats.js                # Entry point, orchestrates everything
 /replays/
-  replay_<replayId>.json.gz  # Downloaded and cached replay files
-fumbblCommandProcessor.js    # Core event/command logic
-MiniGameState.js             # Per-game in-memory state
-StatsModel.js                # Statistics accumulator and analytics
+  replay_<replayId>.json.gz  # Downloaded replay files
+fumbblCommandProcessor.js    # Command/event parsing logic
+MiniGameState.js             # Per-game state
+StatsModel.js                # Statistics and analytics
 ```
 
 ---
 
 ## Credits
 
-- **FUMBBL FFB Client:** [christerk/ffb](https://github.com/christerk/ffb) – original game client, replay, and data structures
+- **FUMBBL FFB Client:** [christerk/ffb](https://github.com/christerk/ffb)
 - **Original FFB Stats logic:** [Candlejack/FFBStats](https://github.com/candlejack/ffb-stats)
-- **Node.js implementation & analytics:** Garcangel
+- **Node.js implementation:** Garcangel
 
 ---

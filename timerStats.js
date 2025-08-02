@@ -101,6 +101,7 @@ export async function timerStats(replayId) {
     printStats(statsModel);
 
     const json = JSON.stringify(statsModel, null, 2);
+
     return json;
   } catch (err) {
     console.error('timerStats error:', err);

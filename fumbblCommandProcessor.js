@@ -1,4 +1,5 @@
 const ACTION_TURN_MODES = ['regular', 'blitz'];
+const PASSIVE_DIALOGS = ['skillUse', 'useApothecary'];
 
 function isActionTurn(turnMode) {
   return ACTION_TURN_MODES.includes(turnMode);
@@ -33,7 +34,7 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
       awayTurnNrChanged = false;
     let newHomeTurnNr, newAwayTurnNr;
 
-    // Per-turn timing update (can still happen in loop)
+    // Per-turn timing update
     if (
       data.turnTime !== undefined &&
       statsModel.currentDrive &&
@@ -52,18 +53,13 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
     for (const modelChange of modelChangeArray) {
       const { modelChangeId, modelChangeKey, modelChangeValue } = modelChange;
 
-      // Home/away playing & mode (affect state, needed for isNewTurn)
       if (modelChangeId === 'gameSetHomePlaying') {
         miniGameState.lastIsHomePlaying = miniGameState.isHomePlaying;
         miniGameState.isHomePlaying = modelChangeValue;
-      }
-      if (modelChangeId === 'gameSetTurnMode') {
+      } else if (modelChangeId === 'gameSetTurnMode') {
         miniGameState.lastTurnMode = miniGameState.turnMode;
         miniGameState.turnMode = modelChangeValue;
-      }
-
-      // Mark when turn number is changed for home/away (defer addTurn logic)
-      if (modelChangeId === 'turnDataSetTurnNr') {
+      } else if (modelChangeId === 'turnDataSetTurnNr') {
         if (modelChangeKey === 'home') {
           homeTurnNrChanged = true;
           newHomeTurnNr = modelChangeValue;
@@ -72,9 +68,7 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
           awayTurnNrChanged = true;
           newAwayTurnNr = modelChangeValue;
         }
-      }
-
-      if (
+      } else if (
         modelChangeId === 'turnDataSetTurnStarted' &&
         modelChangeValue === true
       ) {
@@ -85,6 +79,33 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
         if (currentTurn.timeUntilFirstAction == null) {
           currentTurn.timeUntilFirstAction = data.turnTime;
         }
+      } else if (modelChangeId === 'gameSetWaitingForOpponent') {
+        if (modelChangeValue === true) {
+          // Start passive timer
+          miniGameState.passiveStartTime = data.gameTime;
+          miniGameState.passiveForTeam =
+            miniGameState.isHomePlaying ? 'away' : 'home';
+        } else if (
+          modelChangeValue === false &&
+          miniGameState.passiveStartTime != null
+        ) {
+          // End passive timer
+          const elapsed = data.gameTime - miniGameState.passiveStartTime;
+          const team = miniGameState.passiveForTeam;
+          let lastTurn =
+            team === 'home' ? statsModel.lastTurnHome : statsModel.lastTurnAway;
+          if (lastTurn) {
+            lastTurn.passiveTime = (lastTurn.passiveTime || 0) + elapsed;
+            lastTurn.addPassiveEvent(
+              miniGameState.passiveStartTime,
+              data.gameTime,
+            );
+          }
+          miniGameState.passiveStartTime = null;
+          miniGameState.passiveForTeam = null;
+        }
+      } else if (data.netCommandId === 'serverAddPlayer') {
+        miniGameState.addPlayer(data.player, data.teamId);
       }
     }
 

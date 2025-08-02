@@ -130,6 +130,35 @@ export class StatsModel {
     return arr.length ? Math.max(...arr) : 0;
   }
 
+  getTotalPassiveTime(team) {
+    return this._getTurns(team).reduce(
+      (sum, t) => sum + (t.passiveTime || 0),
+      0,
+    );
+  }
+  getAllPassiveEventDurations(team) {
+    return this._getTurns(team)
+      .flatMap((turn) => turn.passiveEvents)
+      .map((ev) => ev.duration)
+      .filter((ms) => ms > 0);
+  }
+  getAveragePassiveEventTime(team) {
+    const arr = this.getAllPassiveEventDurations(team);
+    if (!arr.length) return 0;
+    return Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length);
+  }
+  getMedianPassiveEventTime(team) {
+    const arr = this.getAllPassiveEventDurations(team).sort((a, b) => a - b);
+    if (!arr.length) return 0;
+    const mid = Math.floor(arr.length / 2);
+    return arr.length % 2 ?
+        arr[mid]
+      : Math.round((arr[mid - 1] + arr[mid]) / 2);
+  }
+  getPassiveEventCount(team) {
+    return this.getAllPassiveEventDurations(team).length;
+  }
+
   // --- Serialization ---
   toJSON() {
     return {
@@ -162,6 +191,15 @@ export class StatsModel {
         this.getMedianTimeUntilFirstAction('home'),
       medianTimeUntilFirstActionAway:
         this.getMedianTimeUntilFirstAction('away'),
+
+      totalPassiveTimeHome: this.getTotalPassiveTime('home'),
+      totalPassiveTimeAway: this.getTotalPassiveTime('away'),
+      averagePassiveTimeHome: this.getAveragePassiveEventTime('home'),
+      averagePassiveTimeAway: this.getAveragePassiveEventTime('away'),
+      medianPassiveTimeHome: this.getMedianPassiveEventTime('home'),
+      medianPassiveTimeAway: this.getMedianPassiveEventTime('away'),
+      passiveEventCountHome: this.getPassiveEventCount('home'),
+      passiveEventCountAway: this.getPassiveEventCount('away'),
     };
   }
 }

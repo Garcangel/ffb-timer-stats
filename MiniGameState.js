@@ -9,6 +9,9 @@ export class MiniGameState {
     this.lastTurnNumber = 0;
     this.isHomePlaying = null;
     this.lastIsHomePlaying = null;
+    this.dialogParameter = null;
+    this.passiveStartTime = null;
+    this.passiveForTeam = null;
 
     const turntimeOption = game.gameOptions?.gameOptionArray?.find(
       (opt) => opt.gameOptionId === 'turntime',
@@ -31,5 +34,29 @@ export class MiniGameState {
       (sum, p) => sum + (p.turnsPlayed || 0),
       0,
     );
+    this.playerTeam = this.buildPlayerTeamMap(game);
+  }
+
+  buildPlayerTeamMap(game) {
+    const map = {};
+    if (game.teamHome && Array.isArray(game.teamHome.playerArray)) {
+      for (const player of game.teamHome.playerArray) {
+        map[player.playerId] = 'home';
+      }
+    }
+    if (game.teamAway && Array.isArray(game.teamAway.playerArray)) {
+      for (const player of game.teamAway.playerArray) {
+        map[player.playerId] = 'away';
+      }
+    }
+    return map;
+  }
+
+  addPlayer(playerObj, teamId) {
+    if (!playerObj || !playerObj.playerId || !teamId) return;
+    let side = undefined;
+    if (teamId === this.teamHomeId) side = 'home';
+    else if (teamId === this.teamAwayId) side = 'away';
+    if (side) this.playerTeam[playerObj.playerId] = side;
   }
 }

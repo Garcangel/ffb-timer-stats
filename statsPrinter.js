@@ -19,7 +19,7 @@ export function printStats(statsModel) {
         statsModel.countTurnsExceededLimit(team, statsModel.turnLimitMs),
     },
     {
-      label: 'Total time used',
+      label: 'Total turn time used',
       fn: (team) => `${formatMs(statsModel.getTotalTime(team), true)}`,
     },
     {
@@ -52,6 +52,24 @@ export function printStats(statsModel) {
       label: 'Median time until first action',
       fn: (team) =>
         `${formatMs(statsModel.getMedianTimeUntilFirstAction(team), false)}`,
+    },
+    {
+      label: 'Passive event count',
+      fn: (team) => statsModel.getPassiveEventCount(team),
+    },
+    {
+      label: 'Total passive time',
+      fn: (team) => `${formatMs(statsModel.getTotalPassiveTime(team), false)}`,
+    },
+    {
+      label: 'Average passive event time',
+      fn: (team) =>
+        `${formatMs(statsModel.getAveragePassiveEventTime(team), false)}`,
+    },
+    {
+      label: 'Median passive event time',
+      fn: (team) =>
+        `${formatMs(statsModel.getMedianPassiveEventTime(team), false)}`,
     },
   ];
 

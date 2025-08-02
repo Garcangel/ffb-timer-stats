@@ -5,6 +5,12 @@ export class Turn {
     this.number = number;
     this.turnTime = null;
     this.timeUntilFirstAction = null;
+    this.passiveTime = 0;
+    this.passiveEvents = [];
+  }
+
+  addPassiveEvent(start, end) {
+    this.passiveEvents.push({ start, end, duration: end - start });
   }
 
   toJSON() {
@@ -14,6 +20,7 @@ export class Turn {
       number: this.number,
       turnTime: this.turnTime,
       timeUntilFirstAction: this.timeUntilFirstAction,
+      passiveTime: this.passiveTime,
     };
   }
 }
