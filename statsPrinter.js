@@ -3,23 +3,15 @@ export function printStats(statsModel) {
 
   const metrics = [
     {
+      label: 'Coach',
+      fn: (team) =>
+        team === 'home' ?
+          statsModel.getCoachNameHome()
+        : statsModel.getCoachNameAway(),
+    },
+    {
       label: 'Total turns',
       fn: (team) => statsModel._getTurns(team).length,
-    },
-    {
-      label: 'Total time used',
-      fn: (team) =>
-        `${formatMs(statsModel.getTotalTime(team), true)} (${statsModel.getTotalTime(team)}ms)`,
-    },
-    {
-      label: 'Average turn time',
-      fn: (team) =>
-        `${formatMs(statsModel.getAverageTurnTime(team), false)} (${statsModel.getAverageTurnTime(team)}ms)`,
-    },
-    {
-      label: 'Median turn time',
-      fn: (team) =>
-        `${formatMs(statsModel.getMedianTurnTime(team), false)} (${statsModel.getMedianTurnTime(team)}ms)`,
     },
     {
       label: 'Turns exceeding limit',
@@ -27,31 +19,47 @@ export function printStats(statsModel) {
         statsModel.countTurnsExceededLimit(team, statsModel.turnLimitMs),
     },
     {
+      label: 'Total time used',
+      fn: (team) => `${formatMs(statsModel.getTotalTime(team), true)}`,
+    },
+    {
+      label: 'Average turn time',
+      fn: (team) => `${formatMs(statsModel.getAverageTurnTime(team), false)}`,
+    },
+    {
+      label: 'Median turn time',
+      fn: (team) => `${formatMs(statsModel.getMedianTurnTime(team), false)}`,
+    },
+    {
+      label: 'Min turn time',
+      fn: (team) => `${formatMs(statsModel.getMinTurnTime(team), false)}`,
+    },
+    {
+      label: 'Max turn time',
+      fn: (team) => `${formatMs(statsModel.getMaxTurnTime(team), false)}`,
+    },
+    {
       label: 'Average time per player turn',
       fn: (team) =>
-        `${formatMs(statsModel.getAverageTimePerPlayerTurn(team), false)} (${statsModel.getAverageTimePerPlayerTurn(team)}ms)`,
+        `${formatMs(statsModel.getAverageTimePerPlayerTurn(team), false)}`,
     },
     {
       label: 'Average time until first action',
       fn: (team) =>
-        `${formatMs(statsModel.getAverageTimeUntilFirstAction(team), false)} (${statsModel.getAverageTimeUntilFirstAction(team)}ms)`,
+        `${formatMs(statsModel.getAverageTimeUntilFirstAction(team), false)}`,
     },
     {
       label: 'Median time until first action',
       fn: (team) =>
-        `${formatMs(statsModel.getMedianTimeUntilFirstAction(team), false)} (${statsModel.getMedianTimeUntilFirstAction(team)}ms)`,
+        `${formatMs(statsModel.getMedianTimeUntilFirstAction(team), false)}`,
     },
   ];
 
-  // Header
-  console.log(
-    `Home Coach: ${statsModel.getCoachNameHome()} | Away Coach: ${statsModel.getCoachNameAway()}`,
-  );
-  console.log('Metric'.padEnd(34) + 'Home'.padEnd(28) + 'Away');
+  console.log(''.padEnd(34) + 'Home'.padEnd(18) + 'Away');
 
   // Metrics
   for (const m of metrics) {
-    const home = String(m.fn('home')).padEnd(28);
+    const home = String(m.fn('home')).padEnd(18);
     const away = String(m.fn('away'));
     console.log(m.label.padEnd(34) + home + away);
   }

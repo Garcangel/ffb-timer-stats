@@ -121,6 +121,15 @@ export class StatsModel {
     return Math.round(this.getTotalTime(team) / totalPlayerTurns);
   }
 
+  getMinTurnTime(team) {
+    const arr = this._getStatArray(team, (t) => t.turnTime || 0);
+    return arr.length ? Math.min(...arr) : 0;
+  }
+  getMaxTurnTime(team) {
+    const arr = this._getStatArray(team, (t) => t.turnTime || 0);
+    return arr.length ? Math.max(...arr) : 0;
+  }
+
   // --- Serialization ---
   toJSON() {
     return {
@@ -136,6 +145,11 @@ export class StatsModel {
       averageTurnTimeAway: this.getAverageTurnTime('away'),
       medianTurnTimeHome: this.getMedianTurnTime('home'),
       medianTurnTimeAway: this.getMedianTurnTime('away'),
+
+      minTurnTimeHome: this.getMinTurnTime('home'),
+      minTurnTimeAway: this.getMinTurnTime('away'),
+      maxTurnTimeHome: this.getMaxTurnTime('home'),
+      maxTurnTimeAway: this.getMaxTurnTime('away'),
 
       averageTimePerPlayerTurnHome: this.getAverageTimePerPlayerTurn('home'),
       averageTimePerPlayerTurnAway: this.getAverageTimePerPlayerTurn('away'),
