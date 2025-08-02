@@ -71,6 +71,18 @@ export function printStats(statsModel) {
       fn: (team) =>
         `${formatMs(statsModel.getMedianPassiveEventTime(team), false)}`,
     },
+    {
+      label: 'Number of drives',
+      fn: (team) => statsModel.getNumberOfDrives(),
+    },
+    {
+      label: 'Total setup time',
+      fn: (team) => formatMs(statsModel.getTotalSetupTime(team), true),
+    },
+    {
+      label: 'Average setup time',
+      fn: (team) => formatMs(statsModel.getAverageSetupTime(team), false),
+    },
   ];
 
   console.log(''.padEnd(34) + 'Home'.padEnd(18) + 'Away');

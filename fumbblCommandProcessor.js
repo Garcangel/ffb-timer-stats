@@ -1,5 +1,4 @@
 const ACTION_TURN_MODES = ['regular', 'blitz'];
-const PASSIVE_DIALOGS = ['skillUse', 'useApothecary'];
 
 function isActionTurn(turnMode) {
   return ACTION_TURN_MODES.includes(turnMode);
@@ -15,17 +14,6 @@ function isNewTurn(lastTurn, isHomeActive, turnNumber, turnMode) {
 }
 
 export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
-  if (data.netCommandId === 'serverModelSync' && data.reportList) {
-    for (const report of data.reportList.reports) {
-      if (report.reportId === 'startHalf') {
-        statsModel.setHalf(report.half);
-      }
-      if (report.reportId === 'kickoffResult') {
-        statsModel.startNewDrive(report.kickoffResult);
-      }
-    }
-  }
-
   if (data.netCommandId === 'serverModelSync') {
     const modelChangeArray = data.modelChangeList.modelChangeArray;
 
@@ -56,15 +44,29 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
       if (modelChangeId === 'gameSetHomePlaying') {
         miniGameState.lastIsHomePlaying = miniGameState.isHomePlaying;
         miniGameState.isHomePlaying = modelChangeValue;
+
+        if (miniGameState.turnMode === 'setup') {
+          const side = modelChangeValue ? 'home' : 'away';
+          miniGameState.setupTimer.switch(side, data.gameTime);
+        }
       } else if (modelChangeId === 'gameSetTurnMode') {
         miniGameState.lastTurnMode = miniGameState.turnMode;
         miniGameState.turnMode = modelChangeValue;
+
+        if (modelChangeValue === 'setup') {
+          const side = miniGameState.isHomePlaying ? 'home' : 'away';
+          miniGameState.setupTimer.start(side, data.gameTime);
+        } else if (
+          miniGameState.lastTurnMode === 'setup' &&
+          miniGameState.setupTimer.inSetup
+        ) {
+          miniGameState.setupTimer.end(data.gameTime);
+        }
       } else if (modelChangeId === 'turnDataSetTurnNr') {
         if (modelChangeKey === 'home') {
           homeTurnNrChanged = true;
           newHomeTurnNr = modelChangeValue;
-        }
-        if (modelChangeKey === 'away') {
+        } else if (modelChangeKey === 'away') {
           awayTurnNrChanged = true;
           newAwayTurnNr = modelChangeValue;
         }
@@ -145,6 +147,28 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
         newAwayTurnNr,
       );
       miniGameState.lastTurnNumberAway = newAwayTurnNr;
+    }
+  }
+
+  // Its important to keep this here if not setup timea fter half breaks.
+  if (data.netCommandId === 'serverModelSync' && data.reportList) {
+    for (const report of data.reportList.reports) {
+      if (report.reportId === 'startHalf') {
+        statsModel.setHalf(report.half);
+        miniGameState.setupTimer.reset();
+        const side = miniGameState.isHomePlaying ? 'home' : 'away';
+        miniGameState.setupTimer.start(side, data.gameTime);
+      } else if (report.reportId === 'kickoffResult') {
+        statsModel.startNewDrive(
+          report.kickoffResult,
+          miniGameState.setupTimer.getDuration('home'),
+          miniGameState.setupTimer.getDuration('away'),
+        );
+        miniGameState.setupTimer.reset();
+      } else if (report.reportId === 'receiveChoice') {
+        miniGameState.isHomePlaying =
+          report.teamId === miniGameState.teamHomeId;
+      }
     }
   }
 }

@@ -24,33 +24,3 @@ export class Turn {
     };
   }
 }
-
-export class Drive {
-  constructor(kickoffType = null) {
-    this.turns = [];
-    this.kickoffType = kickoffType;
-  }
-
-  toJSON() {
-    return {
-      kickoffType: this.kickoffType,
-      turns: this.turns.map((turn) =>
-        typeof turn.toJSON === 'function' ? turn.toJSON() : turn,
-      ),
-    };
-  }
-}
-
-export class Half {
-  constructor() {
-    this.drives = [];
-  }
-
-  toJSON() {
-    return {
-      drives: this.drives.map((drive) =>
-        typeof drive.toJSON === 'function' ? drive.toJSON() : drive,
-      ),
-    };
-  }
-}

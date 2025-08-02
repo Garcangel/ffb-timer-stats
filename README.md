@@ -6,6 +6,7 @@ This Node.js module parses **FUMBBL FFB replays** (official API, zipped JSON str
 
 - **Tracks every regular turn** for both teams (home and away).
 - **Tracks passive events** (opponent dialogs, “waiting for opponent”, skill use, apothecary, etc.), with total, average, and median passive time per team.
+- **Tracks setup times** for each drive, both teams.
 - Associates each turn with timing, passive events, drive, and half.
 - Calculates total, average, median, min, and max turn times, and counts overtime/exceeded turns.
 - Organizes all timing data into halves, drives, and turns.
@@ -27,9 +28,10 @@ This Node.js module parses **FUMBBL FFB replays** (official API, zipped JSON str
 
 - Turn number, team (home/away), and turn type (`regular`, `blitz`).
 - Drive and half structure (`kickoffResult`, `startHalf`).
-- **Turn time** (from server, not computed).
+- **Turn time** (from server).
 - **Passive time:** All periods during a turn where control is handed to the opponent, including skill-use dialogs and apothecary decisions.
 - **Passive event count:** Total number of passive handoffs per turn/team.
+- **Setup time:** Time taken by each team to set up at start of drive.
 - Turn and passive time min/max/avg/median.
 - Turns exceeding time limit.
 
@@ -47,6 +49,7 @@ This Node.js module parses **FUMBBL FFB replays** (official API, zipped JSON str
 - For each `serverModelSync` command:
   - Processes all `reportList` entries and `modelChangeList.modelChangeArray` entries:
     - **Half/drive updates:** `startHalf`, `kickoffResult`
+    - **Setup:** `gameSetTurnMode`, `gameSetHomePlaying`
     - **Turn state:** `gameSetHomePlaying`, `gameSetTurnMode`, `turnDataSetTurnNr`
     - **Turn timing:** Updates the latest turn’s time.
     - **Passive events:** `gameSetDialogParameter`, `gameSetWaitingForOpponent` (tracks start/stop, assigns to team/turn).
@@ -60,42 +63,50 @@ This Node.js module parses **FUMBBL FFB replays** (official API, zipped JSON str
 
 ---
 
-## Model/Classes
+## Models / Classes
 
-### `MiniGameState`
+_All under `/models`:_
 
-- Holds current side, half, turn mode, options, coach names, player-team map, and handles passive timing state.
+- `MiniGameState.js`
+- `StatsModel.js`
+- `Turn.js`
+- `Drive.js`
+- `Half.js`
+- `SetupTimer.js`
 
-### `StatsModel`
+**Description:**
 
-- All stats and turn objects for both teams.
-- Methods for total, mean, median, min, max, per-turn and per-passive-event analytics.
-
-### `Turn`
-
-- Holds all timing for the turn, including passive event count/timing.
+- **MiniGameState:** Per-game state, current side, turn mode, player-team map, and passive/setup timers.
+- **StatsModel:** Central analytics, helpers for total, mean, median, min, max, setup, passive, per-team.
+- **Turn:** Holds all timing for turn, including passive events/times.
+- **Drive:** Includes all turns, setup times for both teams.
+- **Half:** All drives in each half.
+- **SetupTimer:** Utility for drive setup time tracking.
 
 ---
 
 ## Output Example
 
 ```
-Metric                            Home                        Away
-Coach                             happygrue                   BaronBucky
-Total turns                       23                          23
-Turns exceeding limit             2                           0
-Total time used                   01h05m29s                   00h36m44s
-Average turn time                 02m50s                      01m35s
-Median turn time                  02m59s                      01m37s
-Min turn time                     00m48s                      00m36s
-Max turn time                     05m14s                      03m28s
-Average time per player turn      00m15s                      00m09s
-Average time until first action   00m39s                      00m15s
-Median time until first action    00m18s                      00m08s
-Total passive time                00m41s                      00m16s
-Average passive time              00m20s                      00m08s
-Median passive time               00m19s                      00m07s
-Passive event count               2                           2
+                                  Home              Away
+Coach                             CoachA            CoachB
+Total turns                       16                16
+Turns exceeding limit             5                 2
+Total turn time used              00h51m32s         00h41m35s
+Average turn time                 03m13s            02m35s
+Median turn time                  03m35s            02m37s
+Min turn time                     00m33s            01m18s
+Max turn time                     04m54s            04m07s
+Average time per player turn      00m17s            00m15s
+Average time until first action   00m16s            00m15s
+Median time until first action    00m08s            00m09s
+Passive event count               14                18
+Total passive time                01m32s            01m19s
+Average passive event time        00m06s            00m04s
+Median passive event time         00m03s            00m02s
+Number of drives                  5                 5
+Total setup time                  00h15m00s         00h08m13s
+Average setup time                03m00s            01m38s
 ```
 
 ---
@@ -116,12 +127,17 @@ Passive event count               2                           2
 ## File Structure
 
 ```
-timerStats.js                # Entry point, orchestrates everything
+timerStats.js                     # Entry point
 /replays/
-  replay_<replayId>.json.gz  # Downloaded replay files
-fumbblCommandProcessor.js    # Command/event parsing logic
-MiniGameState.js             # Per-game state
-StatsModel.js                # Statistics and analytics
+  replay_<replayId>.json.gz       # Downloaded replay files
+/models/
+  Drive.js
+  Half.js
+  MiniGameState.js
+  SetupTimer.js
+  StatsModel.js
+  Turn.js
+fumbblCommandProcessor.js         # Core event/command logic
 ```
 
 ---

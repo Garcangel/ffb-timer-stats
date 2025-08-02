@@ -1,4 +1,6 @@
-import { Drive, Half, Turn } from './Models.js';
+import { Drive } from './Drive.js';
+import { Half } from './Half.js';
+import { Turn } from './Turn.js';
 
 export class StatsModel {
   constructor({
@@ -30,8 +32,8 @@ export class StatsModel {
     this.currentDrive = null; // reset for new half
   }
 
-  startNewDrive(kickoffType = null) {
-    this.currentDrive = new Drive(kickoffType);
+  startNewDrive(kickoffType, setupTimeHome, setupTimeAway) {
+    this.currentDrive = new Drive(kickoffType, setupTimeHome, setupTimeAway);
     this.currentHalf.drives.push(this.currentDrive);
   }
 
@@ -159,6 +161,37 @@ export class StatsModel {
     return this.getAllPassiveEventDurations(team).length;
   }
 
+  getTotalSetupTime(team) {
+    const drives = [
+      ...this.firstHalf.drives,
+      ...this.secondHalf.drives,
+      ...this.overtime.drives,
+    ];
+    const key = team === 'home' ? 'setupTimeHome' : 'setupTimeAway';
+    return drives.reduce((sum, d) => sum + (d[key] || 0), 0);
+  }
+
+  getAverageSetupTime(team) {
+    const drives = [
+      ...this.firstHalf.drives,
+      ...this.secondHalf.drives,
+      ...this.overtime.drives,
+    ];
+    const key = team === 'home' ? 'setupTimeHome' : 'setupTimeAway';
+    // Only count drives where setup time > 0
+    const arr = drives.map((d) => d[key] || 0).filter((ms) => ms > 0);
+    if (!arr.length) return 0;
+    return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  }
+
+  getNumberOfDrives() {
+    return (
+      this.firstHalf.drives.length +
+      this.secondHalf.drives.length +
+      this.overtime.drives.length
+    );
+  }
+
   // --- Serialization ---
   toJSON() {
     return {
@@ -200,6 +233,12 @@ export class StatsModel {
       medianPassiveTimeAway: this.getMedianPassiveEventTime('away'),
       passiveEventCountHome: this.getPassiveEventCount('home'),
       passiveEventCountAway: this.getPassiveEventCount('away'),
+
+      totalSetupTimeHome: this.getTotalSetupTime('home'),
+      totalSetupTimeAway: this.getTotalSetupTime('away'),
+      averageSetupTimeHome: this.getAverageSetupTime('home'),
+      averageSetupTimeAway: this.getAverageSetupTime('away'),
+      numberOfDrives: this.getNumberOfDrives(),
     };
   }
 }

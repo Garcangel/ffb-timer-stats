@@ -1,7 +1,11 @@
+import SetupTimer from './SetupTimer.js';
+
 export class MiniGameState {
   constructor(game) {
-    this.teamHomeCoach = game.teamHome?.coach;
-    this.teamAwayCoach = game.teamAway?.coach;
+    this.teamHomeCoach = game.teamHome.coach;
+    this.teamAwayCoach = game.teamAway.coach;
+    this.teamHomeId = game.teamHome.teamId;
+    this.teamAwayId = game.teamAway.teamId;
     this.half = 1;
     this.turnMode = 'startGame';
     this.lastTurnMode = 'startGame';
@@ -12,6 +16,8 @@ export class MiniGameState {
     this.dialogParameter = null;
     this.passiveStartTime = null;
     this.passiveForTeam = null;
+    this.setupTimer = new SetupTimer();
+    this.isHomeSetting = false;
 
     const turntimeOption = game.gameOptions?.gameOptionArray?.find(
       (opt) => opt.gameOptionId === 'turntime',

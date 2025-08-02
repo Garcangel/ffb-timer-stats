@@ -4,8 +4,8 @@ import https from 'https';
 import zlib from 'zlib';
 import { fileURLToPath } from 'url';
 import { fumbblCommandProcessor } from './fumbblCommandProcessor.js';
-import { MiniGameState } from './MiniGameState.js';
-import { StatsModel } from './StatsModel.js';
+import { MiniGameState } from './models/MiniGameState.js';
+import { StatsModel } from './models/StatsModel.js';
 import { printStats } from './statsPrinter.js';
 import { pathToFileURL } from 'url';
 
@@ -101,7 +101,7 @@ export async function timerStats(replayId) {
     printStats(statsModel);
 
     const json = JSON.stringify(statsModel, null, 2);
-
+    //console.log('json :>> ', json);
     return json;
   } catch (err) {
     console.error('timerStats error:', err);
@@ -111,7 +111,7 @@ export async function timerStats(replayId) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830374';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830384';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
