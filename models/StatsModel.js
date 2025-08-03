@@ -155,33 +155,20 @@ export class StatsModel {
     return Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length);
   }
   getMedianPassiveEventTime(team) {
-    const arr = this.getAllPassiveEventDurations(team).sort((a, b) => a - b);
-    if (!arr.length) return 0;
-    const mid = Math.floor(arr.length / 2);
-    return arr.length % 2 ?
-        arr[mid]
-      : Math.round((arr[mid - 1] + arr[mid]) / 2);
+    return this._calcMedian(this.getAllPassiveEventDurations(team));
   }
   getPassiveEventCount(team) {
     return this.getAllPassiveEventDurations(team).length;
   }
 
   getTotalSetupTime(team) {
-    const drives = [
-      ...this.firstHalf.drives,
-      ...this.secondHalf.drives,
-      ...this.overtime.drives,
-    ];
+    const drives = this._getDrives();
     const key = team === 'home' ? 'setupTimeHome' : 'setupTimeAway';
     return drives.reduce((sum, d) => sum + (d[key] || 0), 0);
   }
 
   getAverageSetupTime(team) {
-    const drives = [
-      ...this.firstHalf.drives,
-      ...this.secondHalf.drives,
-      ...this.overtime.drives,
-    ];
+    const drives = this._getDrives();
     const key = team === 'home' ? 'setupTimeHome' : 'setupTimeAway';
     // Only count drives where setup time > 0
     const arr = drives.map((d) => d[key] || 0).filter((ms) => ms > 0);
@@ -190,11 +177,7 @@ export class StatsModel {
   }
 
   getNumberOfDrives() {
-    return (
-      this.firstHalf.drives.length +
-      this.secondHalf.drives.length +
-      this.overtime.drives.length
-    );
+    return this._getDrives().length;
   }
 
   getTotalTimedKickoffTime(team) {
@@ -220,6 +203,15 @@ export class StatsModel {
       ...this.secondHalf.drives,
       ...this.overtime.drives,
     ];
+  }
+
+  getTotalCombinedTime(team) {
+    return (
+      this.getTotalTime(team) +
+      this.getTotalPassiveTime(team) +
+      this.getTotalSetupTime(team) +
+      this.getTotalTimedKickoffTime(team)
+    );
   }
 
   // --- Serialization ---
@@ -276,6 +268,9 @@ export class StatsModel {
       averageTimedKickoffTimeAway: this.getAverageTimedKickoffTime('away'),
       timedKickoffCountHome: this.getTimedKickoffCount('home'),
       timedKickoffCountAway: this.getTimedKickoffCount('away'),
+
+      totalCombinedTimeHome: this.getTotalCombinedTime('home'),
+      totalCombinedTimeAway: this.getTotalCombinedTime('away'),
     };
   }
 }

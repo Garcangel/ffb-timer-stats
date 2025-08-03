@@ -2,6 +2,7 @@ export function printStats(statsModel) {
   const teams = ['home', 'away'];
 
   const metrics = [
+    { label: 'Game Info', isBlockTitle: true },
     {
       label: 'Coach',
       fn: (team) =>
@@ -14,13 +15,16 @@ export function printStats(statsModel) {
       fn: (team) => statsModel._getTurns(team).length,
     },
     {
+      label: 'Number of drives',
+      fn: (team) => statsModel.getNumberOfDrives(),
+    },
+
+    //
+    { label: 'Turn Stats', isBlockTitle: true },
+    {
       label: 'Turns exceeding limit',
       fn: (team) =>
         statsModel.countTurnsExceededLimit(team, statsModel.turnLimitMs),
-    },
-    {
-      label: 'Total turn time used',
-      fn: (team) => `${formatMs(statsModel.getTotalTime(team), true)}`,
     },
     {
       label: 'Average turn time',
@@ -54,12 +58,17 @@ export function printStats(statsModel) {
         `${formatMs(statsModel.getMedianTimeUntilFirstAction(team), false)}`,
     },
     {
+      label: 'Total turn time used',
+      fn: (team) => `${formatMs(statsModel.getTotalTime(team), true)}`,
+      bold: true,
+      color: 36, // cyan
+    },
+
+    //
+    { label: 'Passive Events', isBlockTitle: true },
+    {
       label: 'Passive event count',
       fn: (team) => statsModel.getPassiveEventCount(team),
-    },
-    {
-      label: 'Total passive time',
-      fn: (team) => `${formatMs(statsModel.getTotalPassiveTime(team), false)}`,
     },
     {
       label: 'Average passive event time',
@@ -72,29 +81,50 @@ export function printStats(statsModel) {
         `${formatMs(statsModel.getMedianPassiveEventTime(team), false)}`,
     },
     {
-      label: 'Number of drives',
-      fn: (team) => statsModel.getNumberOfDrives(),
+      label: 'Total passive time',
+      fn: (team) => `${formatMs(statsModel.getTotalPassiveTime(team), false)}`,
+      bold: true,
+      color: 36, // cyan
     },
-    {
-      label: 'Total setup time',
-      fn: (team) => formatMs(statsModel.getTotalSetupTime(team), false),
-    },
+
+    //
+    { label: 'Setup', isBlockTitle: true },
     {
       label: 'Average setup time',
       fn: (team) => formatMs(statsModel.getAverageSetupTime(team), false),
     },
     {
+      label: 'Total setup time',
+      fn: (team) => formatMs(statsModel.getTotalSetupTime(team), false),
+      bold: true,
+      color: 36, // cyan
+    },
+
+    //
+    { label: 'Kickoff', isBlockTitle: true },
+    {
       label: 'Timed kickoff event count',
       fn: (team) => statsModel.getTimedKickoffCount(team),
-    },
-    {
-      label: 'Total timed kickoff time',
-      fn: (team) => formatMs(statsModel.getTotalTimedKickoffTime(team), false),
     },
     {
       label: 'Average timed kickoff time',
       fn: (team) =>
         formatMs(statsModel.getAverageTimedKickoffTime(team), false),
+    },
+    {
+      label: 'Total timed kickoff time',
+      fn: (team) => formatMs(statsModel.getTotalTimedKickoffTime(team), false),
+      bold: true,
+      color: 36, // cyan
+    },
+
+    //
+    { label: 'Summary', isBlockTitle: true },
+    {
+      label: 'Total combined time',
+      fn: (team) => formatMs(statsModel.getTotalCombinedTime(team), true),
+      bold: true,
+      color: 36, // cyan
     },
   ];
 
@@ -102,10 +132,39 @@ export function printStats(statsModel) {
 
   // Metrics
   for (const m of metrics) {
-    const home = String(m.fn('home')).padEnd(18);
-    const away = String(m.fn('away'));
-    console.log(m.label.padEnd(34) + home + away);
+    if (m.isBlockTitle) {
+      // Print header with styling
+      console.log('\n\x1b[1m\x1b[4m' + m.label + '\x1b[0m'); // bold+underline
+      continue;
+    }
+    let label = m.label.padEnd(34);
+    let home = String(m.fn('home')).padEnd(18);
+    let away = String(m.fn('away'));
+
+    // Style logic for label
+    if (m.bold && m.color) {
+      label = `\x1b[1m\x1b[${m.color}m${label}\x1b[0m`;
+    } else if (m.bold) {
+      label = `\x1b[1m${label}\x1b[0m`;
+    } else if (m.color) {
+      label = `\x1b[${m.color}m${label}\x1b[0m`;
+    }
+
+    // Style logic for values
+    if (m.bold && m.color) {
+      home = `\x1b[1m\x1b[${m.color}m${home}\x1b[0m`;
+      away = `\x1b[1m\x1b[${m.color}m${away}\x1b[0m`;
+    } else if (m.bold) {
+      home = `\x1b[1m${home}\x1b[0m`;
+      away = `\x1b[1m${away}\x1b[0m`;
+    } else if (m.color) {
+      home = `\x1b[${m.color}m${home}\x1b[0m`;
+      away = `\x1b[${m.color}m${away}\x1b[0m`;
+    }
+
+    console.log(label + home + away);
   }
+  console.log('\n');
 }
 
 function formatMs(ms, withHours = true) {

@@ -116,7 +116,7 @@ export async function timerStats(replayId, print = false, log = false) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1811830';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830814';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
