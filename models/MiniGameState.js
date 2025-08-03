@@ -33,9 +33,6 @@ export class MiniGameState {
     // setup
     this.setupTimer = new SetupTimer();
 
-    // kickoff
-    this.kickoffTimer = null;
-
     const turntimeOption = game.gameOptions?.gameOptionArray?.find(
       (opt) => opt.gameOptionId === 'turntime',
     );

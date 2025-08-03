@@ -5,15 +5,17 @@ import { updateSetupStats } from './updateSetupStats.js';
 import { updateTurnStats } from './updateTurnStats.js';
 
 export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
-  if (data.netCommandId !== 'serverModelSync') return;
+  //if (data.netCommandId !== 'serverModelSync') return;
 
-  const modelChangeArray = data.modelChangeList.modelChangeArray;
+  if (data.netCommandId === 'serverModelSync') {
+    const modelChangeArray = data.modelChangeList.modelChangeArray;
 
-  for (const modelChange of modelChangeArray) {
-    updateGameState(miniGameState, statsModel, data, modelChange);
-    updatePassiveStats(miniGameState, statsModel, data, modelChange);
-    updateSetupStats(miniGameState, data, modelChange);
-    updateKickoffStats(miniGameState, statsModel, data, modelChange);
+    for (const modelChange of modelChangeArray) {
+      updateGameState(miniGameState, statsModel, data, modelChange);
+      updatePassiveStats(miniGameState, statsModel, data, modelChange);
+      updateSetupStats(miniGameState, data, modelChange);
+      updateKickoffStats(miniGameState, statsModel, data, modelChange);
+    }
   }
 
   if (data.reportList) {
