@@ -101,11 +101,8 @@ export async function timerStats(replayId, print = false, log = false) {
     if (log) {
       console.log(
         `Replay ${replayId} | Commands: ${commands.length}\n` +
-          `Download: ${(t1 - t0).toFixed(2)} ms | ` +
-          `Unzip+Parse: ${(t2 - t1).toFixed(2)} ms | ` +
-          `Setup+Sort: ${(t3 - t2).toFixed(2)} ms | ` +
-          `Command Proc: ${(t4 - t3).toFixed(2)} ms | ` +
-          `Print: ${(t5 - t4).toFixed(2)} ms\n` +
+          `Download: ${(t1 - t0).toFixed(2)} ms | Unzip+Parse: ${(t2 - t1).toFixed(2)} ms\n` +
+          `Setup+Sort: ${(t3 - t2).toFixed(2)} ms | Command Proc: ${(t4 - t3).toFixed(2)} ms | Print: ${(t5 - t4).toFixed(2)} ms\n` +
           `Total: ${(t5 - t0).toFixed(2)} ms`,
       );
     }
@@ -119,7 +116,7 @@ export async function timerStats(replayId, print = false, log = false) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1608164';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1811830';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
