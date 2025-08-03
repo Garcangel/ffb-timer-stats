@@ -1,37 +1,12 @@
-import PassiveTimer from './PassiveTimer.js';
 import SetupTimer from './SetupTimer.js';
 
-export class MiniGameState {
+export class GameStateManager {
   constructor(game) {
+    // ---- Immutable metadata ----
     this.teamHomeCoach = game.teamHome.coach;
     this.teamAwayCoach = game.teamAway.coach;
     this.teamHomeId = game.teamHome.teamId;
     this.teamAwayId = game.teamAway.teamId;
-    this.half = 1;
-    this.turnMode = 'startGame';
-    this.lastTurnMode = 'startGame';
-    this.turnNumber = 0;
-    this.lastTurnNumber = 0;
-    this.isHomePlaying = null;
-    this.lastIsHomePlaying = null;
-    this.dialogParameter = null;
-    this.waitingForOpponent = false;
-    this.newHomeTurnNr = false;
-    this.newAwayTurnNr = false;
-    this.homeTurnNrChanged = false;
-    this.awayTurnNrChanged = false;
-
-    // turn
-    this.timeUntilFirstActionHome = null;
-    this.timeUntilFirstActionAway = null;
-    this.pendingTimeUntilFirstActionHome = null;
-    this.pendingTimeUntilFirstActionAway = null;
-
-    // passive
-    this.passiveTimer = new PassiveTimer();
-
-    // setup
-    this.setupTimer = new SetupTimer();
 
     const turntimeOption = game.gameOptions?.gameOptionArray?.find(
       (opt) => opt.gameOptionId === 'turntime',
@@ -54,7 +29,44 @@ export class MiniGameState {
       (sum, p) => sum + (p.turnsPlayed || 0),
       0,
     );
-    this.playerTeam = this.buildPlayerTeamMap(game); //not currently used
+    this.playerTeam = this.buildPlayerTeamMap(game);
+
+    // ---- Per-processor state ----
+
+    // Turn stats state
+    this.turn = {
+      half: 1,
+      turnMode: 'startGame',
+      lastTurnMode: 'startGame',
+      turnNumber: 0,
+      lastTurnNumber: 0,
+      isHomePlaying: null,
+      lastIsHomePlaying: null,
+      newHomeTurnNr: false,
+      newAwayTurnNr: false,
+      homeTurnNrChanged: false,
+      awayTurnNrChanged: false,
+      timeUntilFirstActionHome: null,
+      timeUntilFirstActionAway: null,
+      pendingTimeUntilFirstActionHome: null,
+      pendingTimeUntilFirstActionAway: null,
+    };
+
+    // Passive stats state
+    this.passive = {
+      passiveStartTime: null,
+      passiveForTeam: null,
+    };
+
+    // Setup stats state
+    this.setup = {
+      setupTimer: new SetupTimer(),
+    };
+
+    // Add other processors as needed (kickoff, etc.)
+    this.kickoff = {
+      // Fields as required by kickoff processor
+    };
   }
 
   buildPlayerTeamMap(game) {
