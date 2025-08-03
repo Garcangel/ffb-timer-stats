@@ -128,17 +128,31 @@ export function printStats(statsModel) {
     },
   ];
 
-  console.log(''.padEnd(34) + 'Home'.padEnd(18) + 'Away');
+  const homeCoach = statsModel.getCoachNameHome();
+
+  const minColWidth = 10;
+  const homeColWidth = Math.max(minColWidth, homeCoach.length + 2);
+
+  // Header
+  console.log(
+    ''.padEnd(34) +
+      '\x1b[1m' +
+      'Home'.padEnd(homeColWidth) +
+      '\x1b[0m' +
+      '\x1b[1m' +
+      'Away' +
+      '\x1b[0m',
+  );
 
   // Metrics
   for (const m of metrics) {
     if (m.isBlockTitle) {
       // Print header with styling
-      console.log('\n\x1b[1m\x1b[4m' + m.label + '\x1b[0m'); // bold+underline
+      console.log('\x1b[1m\x1b[4m' + m.label + '\x1b[0m'); // bold+underline
       continue;
     }
     let label = m.label.padEnd(34);
-    let home = String(m.fn('home')).padEnd(18);
+    let home = String(m.fn('home')).padEnd(homeColWidth);
     let away = String(m.fn('away'));
 
     // Style logic for label
@@ -165,6 +179,45 @@ export function printStats(statsModel) {
     console.log(label + home + away);
   }
   console.log('\n');
+}
+
+export function printTurns(statsModel) {
+  const halves = [
+    { label: 'First half drives/turns:', half: statsModel.firstHalf },
+    { label: 'Second half drives/turns:', half: statsModel.secondHalf },
+    { label: 'Overtime drives/turns:', half: statsModel.overtime },
+  ];
+
+  const header = 'Drive  Turn  Team   Num    Time    First  Passive';
+  const divider = '-'.repeat(header.length);
+
+  for (const { label, half } of halves) {
+    console.log('\n' + label);
+    console.log(header);
+    console.log(divider);
+    half.drives.forEach((drive, dIdx) => {
+      drive.turns.forEach((turn, tIdx) => {
+        const driveNum = pad(dIdx + 1, 2);
+        const turnNum = pad(tIdx + 1, 2);
+        const team = turn.isHomeActive ? 'Home' : 'Away';
+        const num = pad(turn.number, 2);
+        const time = padTime(turn.turnTime, 7);
+        const first = padTime(turn.timeUntilFirstAction, 5);
+        const passive = padTime(turn.passiveTime, 6);
+
+        console.log(
+          `${driveNum}     ${turnNum}    ${team.padEnd(5)}  ${num}   ${time}   ${first}   ${passive}`,
+        );
+      });
+    });
+  }
+}
+
+function pad(num, len = 2) {
+  return String(num).padStart(len, '0');
+}
+function padTime(ms, len = 6) {
+  return String(ms).padStart(len, ' ');
 }
 
 function formatMs(ms, withHours = true) {

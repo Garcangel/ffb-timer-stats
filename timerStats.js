@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { fumbblCommandProcessor } from './processors/fumbblCommandProcessor.js';
 import { MiniGameState } from './models/MiniGameState.js';
 import { StatsModel } from './models/StatsModel.js';
-import { printStats } from './statsPrinter.js';
+import { printStats, printTurns } from './statsPrinter.js';
 import { pathToFileURL } from 'url';
 
 async function fetchReplayGz(replayId, gzPath) {
@@ -46,7 +46,12 @@ async function loadReplayJson(gzPath) {
   });
 }
 
-export async function timerStats(replayId, print = false, log = false) {
+export async function timerStats(
+  replayId,
+  print = false,
+  log = false,
+  turns = false,
+) {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -92,7 +97,7 @@ export async function timerStats(replayId, print = false, log = false) {
       await fumbblCommandProcessor(command, miniGameState, statsModel);
     }
     const t4 = performance.now();
-
+    if (turns) printTurns(statsModel);
     if (print) printStats(statsModel);
     const t5 = performance.now();
 
@@ -128,7 +133,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       const start = performance.now();
       const print = true;
       const log = true;
-      const json = await timerStats(replayId, true, log);
+      const turns = true;
+      const json = await timerStats(replayId, print, log, turns);
       const end = performance.now();
       if (!log) {
         console.log(
