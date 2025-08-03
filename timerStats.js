@@ -8,6 +8,7 @@ import { MiniGameState } from './models/MiniGameState.js';
 import { StatsModel } from './models/StatsModel.js';
 import { printStats, printTurns } from './statsPrinter.js';
 import { pathToFileURL } from 'url';
+import { runAllTests } from './tests.js';
 
 async function fetchReplayGz(replayId, gzPath) {
   if (fs.existsSync(gzPath)) return;
@@ -51,6 +52,7 @@ export async function timerStats(
   print = false,
   log = false,
   turns = false,
+  test = false,
 ) {
   try {
     const __filename = fileURLToPath(import.meta.url);
@@ -101,8 +103,6 @@ export async function timerStats(
     if (print) printStats(statsModel);
     const t5 = performance.now();
 
-    const json = JSON.stringify(statsModel, null, 2);
-
     if (log) {
       console.log(
         `Replay ${replayId} | Commands: ${commands.length}\n` +
@@ -112,7 +112,16 @@ export async function timerStats(
       );
     }
 
-    return json;
+    if (test) {
+      const result = runAllTests(statsModel);
+      if (result === true) {
+        console.log('All tests passed.');
+      } else {
+        console.log('Test errors:', result);
+      }
+    }
+
+    return statsModel;
   } catch (err) {
     console.error('timerStats error:', err);
     throw err;
@@ -121,7 +130,7 @@ export async function timerStats(
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1831060';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830814';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -134,15 +143,16 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       const print = true;
       const log = true;
       const turns = true;
-      const json = await timerStats(replayId, print, log, turns);
+      const test = true;
+      const statsModel = await timerStats(replayId, print, log, turns, test);
       const end = performance.now();
       if (!log) {
         console.log(
           `Total timerStats execution: ${(end - start).toFixed(2)} ms`,
         );
       }
-      //console.log('json :>> ', json);
-      // fs.writeFileSync('stats.json', json, 'utf8');
+
+      //console.log('json :>> ', JSON.stringify(statsModel, null, 2));
     } catch (err) {
       console.error('Failed to generate stats:', err);
       process.exit(1);

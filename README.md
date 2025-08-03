@@ -128,6 +128,29 @@ Average timed kickoff time        00m24s            00m00s
 
 ---
 
+## Automated Data Validation
+
+The module runs a suite of data integrity tests on each processed replay to ensure structural and statistical correctness.
+**Tests include:**
+
+- Turns alternate home/away within each drive.
+- The first team to act in the first half is different from the first in the second half.
+- No drive has zero setup time for either team.
+- Every drive contains at least one turn.
+- No negative time values in any timing fields.
+- Turn numbers never decrease for the same team within a drive.
+
+If any test fails, an error message is printed.
+If all tests pass, you see:
+
+```
+All tests passed.
+```
+
+This validation runs automatically after replay processing and before stats are output.
+
+---
+
 ## How to Use
 
 1. **Edit the runner script** (`timerStats.js`), set your replay link or ID.
