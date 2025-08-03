@@ -14,10 +14,27 @@ export class MiniGameState {
     this.isHomePlaying = null;
     this.lastIsHomePlaying = null;
     this.dialogParameter = null;
+    this.waitingForOpponent = false;
+
+    // turn
+    this.newHomeTurnNr = false;
+    this.newAwayTurnNr = false;
+    this.homeTurnNrChanged = false;
+    this.awayTurnNrChanged = false;
+    this.timeUntilFirstActionHome = null;
+    this.timeUntilFirstActionAway = null;
+    this.pendingTimeUntilFirstActionHome = null;
+    this.pendingTimeUntilFirstActionAway = null;
+
+    // passive
     this.passiveStartTime = null;
     this.passiveForTeam = null;
+
+    // setup
     this.setupTimer = new SetupTimer();
-    this.isHomeSetting = false;
+
+    // kickoff
+    this.kickoffTimer = null;
 
     const turntimeOption = game.gameOptions?.gameOptionArray?.find(
       (opt) => opt.gameOptionId === 'turntime',
@@ -40,7 +57,7 @@ export class MiniGameState {
       (sum, p) => sum + (p.turnsPlayed || 0),
       0,
     );
-    this.playerTeam = this.buildPlayerTeamMap(game);
+    this.playerTeam = this.buildPlayerTeamMap(game); //not currently used
   }
 
   buildPlayerTeamMap(game) {

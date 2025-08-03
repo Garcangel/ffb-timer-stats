@@ -32,8 +32,13 @@ export class StatsModel {
     this.currentDrive = null; // reset for new half
   }
 
-  startNewDrive(kickoffType, setupTimeHome, setupTimeAway) {
-    this.currentDrive = new Drive(kickoffType, setupTimeHome, setupTimeAway);
+  startNewDrive(kickoffType, setupTimeHome, setupTimeAway, kickoffStartTime) {
+    this.currentDrive = new Drive(
+      kickoffType,
+      setupTimeHome,
+      setupTimeAway,
+      kickoffStartTime,
+    );
     this.currentHalf.drives.push(this.currentDrive);
   }
 
@@ -192,6 +197,31 @@ export class StatsModel {
     );
   }
 
+  getTotalTimedKickoffTime(team) {
+    return this._getDrives()
+      .filter((d) => d.timedKickoffTeam === team && d.timedKickoff)
+      .reduce((sum, d) => sum + d.timedKickoff, 0);
+  }
+  getAverageTimedKickoffTime(team) {
+    const arr = this._getDrives()
+      .filter((d) => d.timedKickoffTeam === team && d.timedKickoff)
+      .map((d) => d.timedKickoff);
+    if (!arr.length) return 0;
+    return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  }
+  getTimedKickoffCount(team) {
+    return this._getDrives().filter(
+      (d) => d.timedKickoffTeam === team && d.timedKickoff,
+    ).length;
+  }
+  _getDrives() {
+    return [
+      ...this.firstHalf.drives,
+      ...this.secondHalf.drives,
+      ...this.overtime.drives,
+    ];
+  }
+
   // --- Serialization ---
   toJSON() {
     return {
@@ -239,6 +269,13 @@ export class StatsModel {
       averageSetupTimeHome: this.getAverageSetupTime('home'),
       averageSetupTimeAway: this.getAverageSetupTime('away'),
       numberOfDrives: this.getNumberOfDrives(),
+
+      totalTimedKickoffTimeHome: this.getTotalTimedKickoffTime('home'),
+      totalTimedKickoffTimeAway: this.getTotalTimedKickoffTime('away'),
+      averageTimedKickoffTimeHome: this.getAverageTimedKickoffTime('home'),
+      averageTimedKickoffTimeAway: this.getAverageTimedKickoffTime('away'),
+      timedKickoffCountHome: this.getTimedKickoffCount('home'),
+      timedKickoffCountAway: this.getTimedKickoffCount('away'),
     };
   }
 }

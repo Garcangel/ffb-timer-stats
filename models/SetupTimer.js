@@ -23,7 +23,6 @@ class SetupTimer {
 
   switch(team, time) {
     if (this.alreadySwitched) return;
-    // End current team, start next team
     if (this.activeTeam) {
       this.endTimes[this.activeTeam] = time;
       this.durations[this.activeTeam] = time - this.startTimes[this.activeTeam];

@@ -34,6 +34,8 @@ This Node.js module parses **FUMBBL FFB replays** (official API, zipped JSON str
 - **Setup time:** Time taken by each team to set up at start of drive.
 - Turn and passive time min/max/avg/median.
 - Turns exceeding time limit.
+- **Timed kickoff events:** Tracks time spent during kickoff events where a coach is allowed to reposition/move players (e.g. Blitz!, Quick Snap, Solid Defence).
+- **Timed kickoff stats:** Total time, average time, and count for timed kickoff events (by team).
 
 ---
 
@@ -79,9 +81,21 @@ _All under `/models`:_
 - **MiniGameState:** Per-game state, current side, turn mode, player-team map, and passive/setup timers.
 - **StatsModel:** Central analytics, helpers for total, mean, median, min, max, setup, passive, per-team.
 - **Turn:** Holds all timing for turn, including passive events/times.
-- **Drive:** Includes all turns, setup times for both teams.
+- **Drive:** Includes all turns, setup times, and tracks kickoff event timing per-drive (start, end, duration, affected team).
 - **Half:** All drives in each half.
 - **SetupTimer:** Utility for drive setup time tracking.
+
+---
+
+## Processors
+
+_All under `/processors`:_
+
+- `updateGameState.js`
+- `updateTurnStats.js`
+- `updatePassiveStats.js`
+- `updateSetupStats.js`
+- `updateKickoffStats.js`
 
 ---
 
@@ -107,6 +121,9 @@ Median passive event time         00m03s            00m02s
 Number of drives                  5                 5
 Total setup time                  00h15m00s         00h08m13s
 Average setup time                03m00s            01m38s
+Timed kickoff event count         1                 0
+Total timed kickoff time          00m24s            00m00s
+Average timed kickoff time        00m24s            00m00s
 ```
 
 ---
@@ -137,7 +154,13 @@ timerStats.js                     # Entry point
   SetupTimer.js
   StatsModel.js
   Turn.js
-fumbblCommandProcessor.js         # Core event/command logic
+/processors/
+  updateGameState.js
+  updateTurnStats.js
+  updatePassiveStats.js
+  updateSetupStats.js
+  updateKickoffStats.js
+fumbblCommandProcessor.js         # Orchestrates per-frame processing
 ```
 
 ---

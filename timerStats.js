@@ -3,7 +3,7 @@ import path from 'path';
 import https from 'https';
 import zlib from 'zlib';
 import { fileURLToPath } from 'url';
-import { fumbblCommandProcessor } from './fumbblCommandProcessor.js';
+import { fumbblCommandProcessor } from './processors/fumbblCommandProcessor.js';
 import { MiniGameState } from './models/MiniGameState.js';
 import { StatsModel } from './models/StatsModel.js';
 import { printStats } from './statsPrinter.js';
@@ -46,7 +46,7 @@ async function loadReplayJson(gzPath) {
   });
 }
 
-export async function timerStats(replayId) {
+export async function timerStats(replayId, print = false, log = false) {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -61,21 +61,19 @@ export async function timerStats(replayId) {
       fs.mkdirSync(path.dirname(replayGz), { recursive: true });
     }
 
-    await fetchReplayGz(replayId, replayGz);
-    const replayJson = await loadReplayJson(replayGz);
+    const t0 = performance.now();
+    await fetchReplayGz(replayId, replayGz); // Download
+    const t1 = performance.now();
 
-    if (!replayJson) {
-      throw new Error('replayJson is null or undefined');
-    }
-    if (!replayJson.game) {
+    const replayJson = await loadReplayJson(replayGz); // Unzip & parse JSON
+    const t2 = performance.now();
+
+    if (!replayJson) throw new Error('replayJson is null or undefined');
+    if (!replayJson.game)
       throw new Error('replayJson.game is missing or falsy');
-    }
-    if (!replayJson.gameLog) {
-      throw new Error('replayJson.gameLog is missing');
-    }
-    if (!Array.isArray(replayJson.gameLog.commandArray)) {
+    if (!replayJson.gameLog) throw new Error('replayJson.gameLog is missing');
+    if (!Array.isArray(replayJson.gameLog.commandArray))
       throw new Error('replayJson.gameLog.commandArray is not an array');
-    }
 
     const miniGameState = new MiniGameState(replayJson.game);
     const statsModel = new StatsModel({
@@ -89,19 +87,29 @@ export async function timerStats(replayId) {
     const commands = [...replayJson.gameLog.commandArray];
     commands.sort((a, b) => a.commandNr - b.commandNr);
 
-    const start = performance.now();
+    const t3 = performance.now();
     for (const command of commands) {
       await fumbblCommandProcessor(command, miniGameState, statsModel);
     }
-    const end = performance.now();
-    console.log(`Processing time: ${(end - start).toFixed(2)} ms`);
+    const t4 = performance.now();
 
-    console.log(`Finished processing ${commands.length} commands.`);
-    console.log(`Finished processing replay ${replayId}`);
-    printStats(statsModel);
+    if (print) printStats(statsModel);
+    const t5 = performance.now();
 
     const json = JSON.stringify(statsModel, null, 2);
-    //console.log('json :>> ', json);
+
+    if (log) {
+      console.log(
+        `Replay ${replayId} | Commands: ${commands.length}\n` +
+          `Download: ${(t1 - t0).toFixed(2)} ms | ` +
+          `Unzip+Parse: ${(t2 - t1).toFixed(2)} ms | ` +
+          `Setup+Sort: ${(t3 - t2).toFixed(2)} ms | ` +
+          `Command Proc: ${(t4 - t3).toFixed(2)} ms | ` +
+          `Print: ${(t5 - t4).toFixed(2)} ms\n` +
+          `Total: ${(t5 - t0).toFixed(2)} ms`,
+      );
+    }
+
     return json;
   } catch (err) {
     console.error('timerStats error:', err);
@@ -111,7 +119,7 @@ export async function timerStats(replayId) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830384';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1608164';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -121,9 +129,15 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 
     try {
       const start = performance.now();
-      const json = await timerStats(replayId);
+      const print = true;
+      const log = true;
+      const json = await timerStats(replayId, true, log);
       const end = performance.now();
-      console.log(`Total timerStats execution: ${(end - start).toFixed(2)} ms`);
+      if (!log) {
+        console.log(
+          `Total timerStats execution: ${(end - start).toFixed(2)} ms`,
+        );
+      }
       //console.log('json :>> ', json);
       // fs.writeFileSync('stats.json', json, 'utf8');
     } catch (err) {

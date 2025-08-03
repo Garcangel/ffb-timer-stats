@@ -77,11 +77,24 @@ export function printStats(statsModel) {
     },
     {
       label: 'Total setup time',
-      fn: (team) => formatMs(statsModel.getTotalSetupTime(team), true),
+      fn: (team) => formatMs(statsModel.getTotalSetupTime(team), false),
     },
     {
       label: 'Average setup time',
       fn: (team) => formatMs(statsModel.getAverageSetupTime(team), false),
+    },
+    {
+      label: 'Timed kickoff event count',
+      fn: (team) => statsModel.getTimedKickoffCount(team),
+    },
+    {
+      label: 'Total timed kickoff time',
+      fn: (team) => formatMs(statsModel.getTotalTimedKickoffTime(team), false),
+    },
+    {
+      label: 'Average timed kickoff time',
+      fn: (team) =>
+        formatMs(statsModel.getAverageTimedKickoffTime(team), false),
     },
   ];
 
