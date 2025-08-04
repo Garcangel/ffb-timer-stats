@@ -48,6 +48,7 @@ async function loadReplayJson(gzPath) {
 }
 
 export async function timerStats(
+  folderPath,
   replayId,
   print = false,
   log = false,
@@ -60,7 +61,7 @@ export async function timerStats(
 
     const replayGz = path.join(
       __dirname,
-      './replays',
+      folderPath,
       `replay_${replayId}.json.gz`,
     );
 
@@ -139,12 +140,20 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const replayId = match[1];
 
     try {
+      const path = './replays';
       const start = performance.now();
       const print = true;
       const log = true;
       const turns = true;
       const test = true;
-      const statsModel = await timerStats(replayId, print, log, turns, test);
+      const statsModel = await timerStats(
+        path,
+        replayId,
+        print,
+        log,
+        turns,
+        test,
+      );
       const end = performance.now();
       if (!log) {
         console.log(
@@ -152,7 +161,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         );
       }
 
-      //console.log('json :>> ', JSON.stringify(statsModel, null, 2));
+      console.log('json :>> ', JSON.stringify(statsModel, null, 2));
     } catch (err) {
       console.error('Failed to generate stats:', err);
       process.exit(1);

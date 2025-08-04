@@ -219,6 +219,8 @@ export class StatsModel {
     return {
       homeCoach: this.homeCoach,
       awayCoach: this.awayCoach,
+      totalTurnsHome: this._getTurns('home').length,
+      totalTurnsAway: this._getTurns('away').length,
       firstHalf: this.firstHalf.toJSON(),
       secondHalf: this.secondHalf.toJSON(),
       overtime: this.overtime.toJSON(),
