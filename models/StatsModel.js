@@ -233,11 +233,11 @@ export class StatsModel {
       averageTurnTimeAway: this.getAverageTurnTime('away'),
       medianTurnTimeHome: this.getMedianTurnTime('home'),
       medianTurnTimeAway: this.getMedianTurnTime('away'),
-      turnsExceedingLimitHome: this.countTurnsExceededLimit(
+      turnsExceededLimitHome: this.countTurnsExceededLimit(
         'home',
         this.turnLimitMs,
       ),
-      turnsExceedingLimitAway: this.countTurnsExceededLimit(
+      turnsExceededLimitAway: this.countTurnsExceededLimit(
         'away',
         this.turnLimitMs,
       ),
