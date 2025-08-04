@@ -192,6 +192,5 @@ fumbblCommandProcessor.js         # Orchestrates per-frame processing
 
 - **FUMBBL FFB Client:** [christerk/ffb](https://github.com/christerk/ffb)
 - **Original FFB Stats logic:** [Candlejack/FFBStats](https://github.com/candlejack/ffb-stats)
-- **Node.js implementation:** Garcangel
 
 ---
