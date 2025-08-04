@@ -217,13 +217,15 @@ export class StatsModel {
   // --- Serialization ---
   toJSON() {
     return {
+      firstHalf: this.firstHalf.toJSON(),
+      secondHalf: this.secondHalf.toJSON(),
+      overtime: this.overtime.toJSON(),
+
+      turnLimit: this.turnLimitMs,
       homeCoach: this.homeCoach,
       awayCoach: this.awayCoach,
       totalTurnsHome: this._getTurns('home').length,
       totalTurnsAway: this._getTurns('away').length,
-      firstHalf: this.firstHalf.toJSON(),
-      secondHalf: this.secondHalf.toJSON(),
-      overtime: this.overtime.toJSON(),
 
       totalTimeHome: this.getTotalTime('home'),
       totalTimeAway: this.getTotalTime('away'),
@@ -231,6 +233,14 @@ export class StatsModel {
       averageTurnTimeAway: this.getAverageTurnTime('away'),
       medianTurnTimeHome: this.getMedianTurnTime('home'),
       medianTurnTimeAway: this.getMedianTurnTime('away'),
+      turnsExceedingLimitHome: this.countTurnsExceededLimit(
+        'home',
+        this.turnLimitMs,
+      ),
+      turnsExceedingLimitAway: this.countTurnsExceededLimit(
+        'away',
+        this.turnLimitMs,
+      ),
 
       minTurnTimeHome: this.getMinTurnTime('home'),
       minTurnTimeAway: this.getMinTurnTime('away'),
