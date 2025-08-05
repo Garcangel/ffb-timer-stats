@@ -214,40 +214,53 @@ export function printTurns(statsModel) {
 }
 
 export async function printCoachTimeStats(stats) {
-  // Prepare, sort descending by totalCombinedTime
   const arr = Object.entries(stats)
     .map(([coach, data]) => ({
       coach,
       averageTurnTime: data.averageTurnTime,
+      medianTurnTime: data.medianTurnTime,
       totalCombinedTime: data.totalCombinedTime,
+      averageTimePerPlayerTurn: data.averageTimePerPlayerTurn,
     }))
     .sort((a, b) => (b.averageTurnTime ?? 0) - (a.averageTurnTime ?? 0));
 
-  // Get max width for coach column
   const coachColWidth = Math.max(5, ...arr.map((row) => row.coach.length));
 
-  // Print header
   const header =
     'Coach'.padEnd(coachColWidth) +
     ' | ' +
-    'Avg Turn'.padEnd(12) +
+    'Avg Turn'.padEnd(9) +
+    ' | ' +
+    'Med Turn'.padEnd(9) +
+    ' | ' +
+    'Avg/PTurn'.padEnd(9) +
     ' | ' +
     'Total Time';
   console.log(header);
   console.log('-'.repeat(header.length));
 
-  // Print rows
   for (const row of arr) {
     const avgTurn =
       row.averageTurnTime != null ? formatMs(row.averageTurnTime, false) : '-';
+    const medTurn =
+      row.medianTurnTime != null ? formatMs(row.medianTurnTime, false) : '-';
+    const avgPTurn =
+      row.averageTimePerPlayerTurn != null ?
+        formatMs(row.averageTimePerPlayerTurn, false)
+      : '-';
     const total =
       row.totalCombinedTime != null ?
         formatMs(row.totalCombinedTime, true)
       : '-';
+
     console.log(
       row.coach.padEnd(coachColWidth) +
         ' | ' +
-        avgTurn.padEnd(12) +
+        avgTurn.padEnd(9) +
+        ' | ' +
+        medTurn.padEnd(9) +
+        ' | ' +
+        avgPTurn.padEnd(9) +
         ' | ' +
         total,
     );

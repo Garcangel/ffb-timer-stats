@@ -216,7 +216,9 @@ export async function extractCoachTimeStats(statsPath) {
 
     result[coach] = {
       averageTurnTime: src.averageTurnTime?.avg ?? null,
-      totalCombinedTime: src.totalCombinedTime?.avg ?? null, // .avg for summary, or just value for full
+      medianTurnTime: src.medianTurnTime?.avg ?? null,
+      totalCombinedTime: src.totalCombinedTime?.avg ?? null,
+      averageTimePerPlayerTurn: src.averageTimePerPlayerTurn?.avg ?? null,
     };
   }
   await printCoachTimeStats(result);
