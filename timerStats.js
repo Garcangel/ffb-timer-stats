@@ -10,9 +10,9 @@ import { printStats, printTurns } from './statsPrinter.js';
 import { pathToFileURL } from 'url';
 import { runAllTests } from './tests.js';
 
-async function fetchReplayGz(replayId, gzPath) {
+export async function fetchReplayGz(replayId, gzPath) {
   if (fs.existsSync(gzPath)) return;
-
+  console.log('gzPath :>> ', gzPath);
   const url = `https://fumbbl.com/api/replay/get/${replayId}/gz`;
   await new Promise((resolve, reject) => {
     const req = https.get(url, (res) => {
@@ -90,10 +90,10 @@ export async function timerStats(
       turnLimitMs: miniGameState.turnLimit,
       totalPlayerTurnsHome: miniGameState.totalPlayerTurnsHome,
       totalPlayerTurnsAway: miniGameState.totalPlayerTurnsAway,
+      wasConceded: miniGameState.wasConceded,
     });
 
     const commands = [...replayJson.gameLog.commandArray];
-    commands.sort((a, b) => a.commandNr - b.commandNr);
 
     const t3 = performance.now();
     for (const command of commands) {
@@ -113,16 +113,17 @@ export async function timerStats(
       );
     }
 
+    let testResult = true;
     if (test) {
-      const result = runAllTests(statsModel);
-      if (result === true) {
+      testResult = runAllTests(statsModel);
+      if (testResult === true) {
         console.log('All tests passed.');
       } else {
-        console.log('Test errors:', result);
+        console.log(`Test errors for replayId ${replayId}:`, testResult);
       }
     }
 
-    return statsModel;
+    return { statsModel, tests: testResult };
   } catch (err) {
     console.error('timerStats error:', err);
     throw err;
@@ -131,7 +132,7 @@ export async function timerStats(
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1830814';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1774485';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -140,13 +141,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const replayId = match[1];
 
     try {
-      const path = './replays';
+      const path = './data/replays';
       const start = performance.now();
       const print = true;
       const log = true;
       const turns = true;
       const test = true;
-      const statsModel = await timerStats(
+      const { statsModel } = await timerStats(
         path,
         replayId,
         print,
@@ -161,7 +162,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         );
       }
 
-      console.log('json :>> ', JSON.stringify(statsModel, null, 2));
+      //console.log('json :>> ', JSON.stringify(statsModel, null, 2));
     } catch (err) {
       console.error('Failed to generate stats:', err);
       process.exit(1);

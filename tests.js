@@ -44,6 +44,7 @@ function testFirstTeamSwitches(json) {
   const firstDrive2 = json.secondHalf?.drives?.[0];
 
   if (!firstDrive1 || !firstDrive2) {
+    if (json.wasConceded) return true;
     return 'ERROR: Missing drives for one or both halves';
   }
   const firstTeamFirstHalf = firstDrive1.turns?.[0]?.isHomeActive;

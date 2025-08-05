@@ -4,13 +4,30 @@ function isActionTurn(turnMode) {
   return ACTION_TURN_MODES.includes(turnMode);
 }
 
-function isNewTurn(lastTurn, isHomeActive, turnNumber, turnMode) {
-  return (
-    !lastTurn ||
-    lastTurn.isHomeActive !== isHomeActive ||
-    lastTurn.number !== turnNumber ||
-    lastTurn.turnMode !== turnMode
-  );
+function isNewTurn(
+  lastTurn,
+  isHomeActive,
+  turnNumber,
+  turnMode,
+  currentDriveId,
+) {
+  // No previous turn
+  if (!lastTurn) return true;
+
+  // New drive started
+  if (lastTurn.driveId !== currentDriveId) return true;
+
+  // Team has changed
+  if (lastTurn.isHomeActive !== isHomeActive) return true;
+
+  // Turn number has changed
+  if (lastTurn.number !== turnNumber) return true;
+
+  // Turn mode has changed
+  if (lastTurn.turnMode !== turnMode) return true;
+
+  // None of the above: same turn
+  return false;
 }
 
 export function updateTurnStats(miniGameState, statsModel, data) {
@@ -23,6 +40,7 @@ export function updateTurnStats(miniGameState, statsModel, data) {
       true,
       miniGameState.newHomeTurnNr,
       miniGameState.turnMode,
+      statsModel.currentDrive,
     )
   ) {
     statsModel.lastTurnHome = statsModel.addTurn(
@@ -49,6 +67,7 @@ export function updateTurnStats(miniGameState, statsModel, data) {
       false,
       miniGameState.newAwayTurnNr,
       miniGameState.turnMode,
+      statsModel.currentDrive,
     )
   ) {
     statsModel.lastTurnAway = statsModel.addTurn(

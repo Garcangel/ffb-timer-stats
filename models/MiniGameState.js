@@ -55,6 +55,13 @@ export class MiniGameState {
       0,
     );
     this.playerTeam = this.buildPlayerTeamMap(game); //not currently used
+
+    this.wasConceded = null;
+    if (game.gameResult.teamResultHome.conceded === true) {
+      this.wasConceded = 'home';
+    } else if (game.gameResult.teamResultAway.conceded === true) {
+      this.wasConceded = 'away';
+    }
   }
 
   buildPlayerTeamMap(game) {

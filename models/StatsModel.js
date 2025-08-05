@@ -9,6 +9,7 @@ export class StatsModel {
     turnLimitMs,
     totalPlayerTurnsHome,
     totalPlayerTurnsAway,
+    wasConceded,
   }) {
     this.firstHalf = new Half();
     this.secondHalf = new Half();
@@ -23,6 +24,7 @@ export class StatsModel {
     this.turnLimitMs = turnLimitMs;
     this.totalPlayerTurnsHome = totalPlayerTurnsHome;
     this.totalPlayerTurnsAway = totalPlayerTurnsAway;
+    this.wasConceded = wasConceded;
   }
 
   setHalf(halfNum) {
@@ -283,6 +285,8 @@ export class StatsModel {
 
       totalCombinedTimeHome: this.getTotalCombinedTime('home'),
       totalCombinedTimeAway: this.getTotalCombinedTime('away'),
+
+      wasConceded: this.wasConceded,
     };
   }
 }

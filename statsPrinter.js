@@ -213,6 +213,47 @@ export function printTurns(statsModel) {
   }
 }
 
+export async function printCoachTimeStats(stats) {
+  // Prepare, sort descending by totalCombinedTime
+  const arr = Object.entries(stats)
+    .map(([coach, data]) => ({
+      coach,
+      averageTurnTime: data.averageTurnTime,
+      totalCombinedTime: data.totalCombinedTime,
+    }))
+    .sort((a, b) => (b.averageTurnTime ?? 0) - (a.averageTurnTime ?? 0));
+
+  // Get max width for coach column
+  const coachColWidth = Math.max(5, ...arr.map((row) => row.coach.length));
+
+  // Print header
+  const header =
+    'Coach'.padEnd(coachColWidth) +
+    ' | ' +
+    'Avg Turn'.padEnd(12) +
+    ' | ' +
+    'Total Time';
+  console.log(header);
+  console.log('-'.repeat(header.length));
+
+  // Print rows
+  for (const row of arr) {
+    const avgTurn =
+      row.averageTurnTime != null ? formatMs(row.averageTurnTime, false) : '-';
+    const total =
+      row.totalCombinedTime != null ?
+        formatMs(row.totalCombinedTime, true)
+      : '-';
+    console.log(
+      row.coach.padEnd(coachColWidth) +
+        ' | ' +
+        avgTurn.padEnd(12) +
+        ' | ' +
+        total,
+    );
+  }
+}
+
 function pad(num, len = 2) {
   return String(num).padStart(len, '0');
 }
