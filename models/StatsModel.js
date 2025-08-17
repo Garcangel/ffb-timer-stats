@@ -26,6 +26,8 @@ export class StatsModel {
     this.totalPlayerTurnsAway = totalPlayerTurnsAway;
     this.wasConceded = wasConceded;
     this.adminMode = false;
+    this.homeTimeouts = 0;
+    this.awayTimeouts = 0;
   }
 
   setHalf(halfNum) {
@@ -229,6 +231,9 @@ export class StatsModel {
       awayCoach: this.awayCoach,
       totalTurnsHome: this._getTurns('home').length,
       totalTurnsAway: this._getTurns('away').length,
+
+      homeTimeouts: this.homeTimeouts,
+      awayTimeouts: this.awayTimeouts,
 
       totalTimeHome: this.getTotalTime('home'),
       totalTimeAway: this.getTotalTime('away'),

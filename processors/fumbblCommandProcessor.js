@@ -39,6 +39,13 @@ export async function fumbblCommandProcessor(data, miniGameState, statsModel) {
           isHomeChoosing ? report.receiveChoice : !report.receiveChoice;
         // Home sets up first if home is NOT receiving
         miniGameState.isHomePlaying = !isHomeReceiving;
+      } else if (report.reportId === 'timeoutEnforced') {
+        const isHomeTimeout = report.coach === miniGameState.teamHomeCoach;
+        if (isHomeTimeout) {
+          statsModel.homeTimeouts++;
+        } else {
+          statsModel.awayTimeouts++;
+        }
       }
     }
   }

@@ -18,6 +18,11 @@ export function printStats(statsModel) {
       label: 'Number of drives',
       fn: (team) => statsModel.getNumberOfDrives(),
     },
+    {
+      label: 'Timeouts enforced',
+      fn: (team) =>
+        team === 'home' ? statsModel.homeTimeouts : statsModel.awayTimeouts,
+    },
 
     //
     { label: 'Turn Stats', isBlockTitle: true },

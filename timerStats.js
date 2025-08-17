@@ -131,7 +131,7 @@ export async function timerStats(
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1623592';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1833817';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -161,7 +161,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         );
       }
 
-      console.log('json :>> ', JSON.stringify(statsModel, null, 2));
+      //console.log('json :>> ', JSON.stringify(statsModel, null, 2));
     } catch (err) {
       console.error('Failed to generate stats:', err);
       process.exit(1);
