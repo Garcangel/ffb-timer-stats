@@ -50,7 +50,9 @@ export function updateGameState(miniGameState, statsModel, data, modelChange) {
         miniGameState.pendingTimeUntilFirstActionAway = data.turnTime;
       }
     }
-  } else if (data.netCommandId === 'serverAddPlayer') {
+  } else if (modelChangeId === 'serverAddPlayer') {
     miniGameState.addPlayer(data.player, data.teamId);
+  } else if (modelChangeId === 'gameSetAdminMode') {
+    statsModel.adminMode = modelChangeValue;
   }
 }

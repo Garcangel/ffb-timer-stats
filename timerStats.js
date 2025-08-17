@@ -12,7 +12,6 @@ import { runAllTests } from './tests.js';
 
 export async function fetchReplayGz(replayId, gzPath) {
   if (fs.existsSync(gzPath)) return;
-  console.log('gzPath :>> ', gzPath);
   const url = `https://fumbbl.com/api/replay/get/${replayId}/gz`;
   await new Promise((resolve, reject) => {
     const req = https.get(url, (res) => {
@@ -117,7 +116,7 @@ export async function timerStats(
     if (test) {
       testResult = runAllTests(statsModel);
       if (testResult === true) {
-        console.log('All tests passed.');
+        //console.log('All tests passed.');
       } else {
         console.log(`Test errors for replayId ${replayId}:`, testResult);
       }
@@ -132,7 +131,7 @@ export async function timerStats(
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1774485';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1623592';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -162,7 +161,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         );
       }
 
-      //console.log('json :>> ', JSON.stringify(statsModel, null, 2));
+      console.log('json :>> ', JSON.stringify(statsModel, null, 2));
     } catch (err) {
       console.error('Failed to generate stats:', err);
       process.exit(1);

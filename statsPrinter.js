@@ -267,6 +267,54 @@ export async function printCoachTimeStats(stats) {
   }
 }
 
+export async function printGlobalTimeStats(summary) {
+  const timeFields = [
+    'totalTime',
+    'averageTurnTime',
+    'medianTurnTime',
+    'minTurnTime',
+    'maxTurnTime',
+    'averageTimePerPlayerTurn',
+    'averageTimeUntilFirstAction',
+    'medianTimeUntilFirstAction',
+    'totalPassiveTime',
+    'averagePassiveTime',
+    'medianPassiveTime',
+    'totalSetupTime',
+    'averageSetupTime',
+    'totalTimedKickoffTime',
+    'averageTimedKickoffTime',
+    'totalCombinedTime',
+  ];
+
+  const metricColWidth = Math.max(6, ...timeFields.map((k) => k.length));
+
+  const header =
+    'Metric'.padEnd(metricColWidth) +
+    ' | ' +
+    'Avg'.padEnd(10) +
+    ' | ' +
+    'Median'.padEnd(10);
+  console.log(header);
+  console.log('-'.repeat(header.length));
+
+  for (const metric of timeFields) {
+    const s = summary[metric] || {};
+    const avg = s.avg ?? null;
+    const median = s.median ?? null;
+
+    const formatVal = (val) => (val == null ? '-' : formatMs(val, false));
+
+    console.log(
+      metric.padEnd(metricColWidth) +
+        ' | ' +
+        formatVal(avg).padEnd(10) +
+        ' | ' +
+        formatVal(median).padEnd(10),
+    );
+  }
+}
+
 function pad(num, len = 2) {
   return String(num).padStart(len, '0');
 }

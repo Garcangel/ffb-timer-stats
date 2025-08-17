@@ -113,11 +113,28 @@ export async function downloadAllReplays(replayIds) {
   }
 }
 
+export async function loadReplayIds(groupId) {
+  const dir = path.join(__dirname, '../data/groupReplays/replayIds');
+  const replayIdsPath = path.join(dir, `replayIds_${groupId}.json`);
+  try {
+    const data = await fs.readFile(replayIdsPath, 'utf8');
+    return JSON.parse(data);
+  } catch (e) {
+    throw new Error(`Failed to load replayIds: ${e.message}`);
+  }
+}
+
 // NBFL new : 15668
 // NCBB new: 15469
-// NWBL : 14726
-const groupId = 15668;
-const allReplayIds = await fetchAllReplayIdsForGroup(groupId);
-console.log(allReplayIds);
+// NWBL: 14726
+// GDR: 17628
+// FDL: 14630
+// blackbox: 'blackbox'
+const groupId = 'blackbox';
 
-await downloadAllReplays(allReplayIds);
+//const replayIds = await fetchAllReplayIdsForGroup(groupId);
+//console.log(replayIds);
+
+const replayIds = await loadReplayIds(groupId);
+
+await downloadAllReplays(replayIds);
