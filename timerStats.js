@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 import zlib from 'zlib';
 import { fileURLToPath } from 'url';
 import { fumbblCommandProcessor } from './processors/fumbblCommandProcessor.js';
@@ -9,24 +8,7 @@ import { StatsModel } from './models/StatsModel.js';
 import { printStats, printTurns } from './statsPrinter.js';
 import { pathToFileURL } from 'url';
 import { runAllTests } from './tests.js';
-
-export async function fetchReplayGz(replayId, gzPath) {
-  if (fs.existsSync(gzPath)) return;
-  const url = `https://fumbbl.com/api/replay/get/${replayId}/gz`;
-  await new Promise((resolve, reject) => {
-    const req = https.get(url, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`HTTP ${res.statusCode}`));
-        return;
-      }
-      const file = fs.createWriteStream(gzPath);
-      res.pipe(file);
-      file.on('finish', () => file.close(resolve));
-      file.on('error', reject);
-    });
-    req.on('error', reject);
-  });
-}
+import { fetchReplayGz } from './fetchReplayGz.js';
 
 async function loadReplayJson(gzPath) {
   return new Promise((resolve, reject) => {
@@ -53,6 +35,7 @@ export async function timerStats(
   log = false,
   turns = false,
   test = false,
+  userAgent = null,
 ) {
   try {
     const __filename = fileURLToPath(import.meta.url);
@@ -69,7 +52,8 @@ export async function timerStats(
     }
 
     const t0 = performance.now();
-    await fetchReplayGz(replayId, replayGz); // Download
+
+    await fetchReplayGz(replayId, replayGz, userAgent); // Download
     const t1 = performance.now();
 
     const replayJson = await loadReplayJson(replayGz); // Unzip & parse JSON
@@ -130,8 +114,9 @@ export async function timerStats(
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await import('dotenv/config');
   (async () => {
-    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1833817';
+    const gameLink = 'https://fumbbl.com/ffblive.jnlp?replay=1462624';
     const match = gameLink.match(/replay=(\d+)/);
     if (!match) {
       console.error('❌ Invalid gameLink format. Must contain ?replay=XXXXXX');
@@ -140,19 +125,21 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const replayId = match[1];
 
     try {
-      const path = './data/replays';
+      const replaysDir = './data/replays';
       const start = performance.now();
       const print = true;
       const log = true;
       const turns = true;
       const test = true;
+      const USER_AGENT = process.env.USER_AGENT || null;
       const { statsModel } = await timerStats(
-        path,
+        replaysDir,
         replayId,
         print,
         log,
         turns,
         test,
+        USER_AGENT,
       );
       const end = performance.now();
       if (!log) {

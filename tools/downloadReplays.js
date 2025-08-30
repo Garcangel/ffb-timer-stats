@@ -1,7 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { fetchReplayGz } from '../timerStats.js';
+import { closeReplayAgent, fetchReplayGz } from '../fetchReplayGz.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const USER_AGENT = process.env.USER_AGENT || null;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +25,7 @@ async function getReplayIdFromMatchFile(matchId) {
   }
 }
 
-export async function downloadReplayForMatch(matchId) {
+async function downloadReplayForMatch(matchId) {
   const replayId = await getReplayIdFromMatchFile(matchId);
   if (!replayId) {
     console.log(`No replayId for match ${matchId}`);
@@ -33,7 +37,7 @@ export async function downloadReplayForMatch(matchId) {
     //
   }
   const gzPath = path.join(replaysFolderPath, `${replayId}.json.gz`);
-  const ok = await fetchReplayGz(replayId, gzPath);
+  const ok = await fetchReplayGz(replayId, gzPath, USER_AGENT, 1000);
   if (ok) {
     console.log(
       `Downloaded replay for match ${matchId} (replayId ${replayId})`,
@@ -46,10 +50,7 @@ export async function downloadReplayForMatch(matchId) {
   return ok;
 }
 
-export async function downloadReplaysFromMatchesInRange(
-  startMatchId,
-  endMatchId,
-) {
+async function downloadReplaysFromMatchesInRange(startMatchId, endMatchId) {
   const maxNulls = 20;
   let nullCount = 0;
   for (let matchId = startMatchId; matchId >= endMatchId; matchId--) {
@@ -66,12 +67,10 @@ export async function downloadReplaysFromMatchesInRange(
       }
     }
   }
+  closeReplayAgent();
 }
 
-export async function downloadReplaysFromMatches(
-  startMatchId,
-  direction = 'forward',
-) {
+async function downloadReplaysFromMatches(startMatchId, direction = 'forward') {
   const maxNulls = 20;
   let matchId = startMatchId;
   let nullCount = 0;
@@ -86,7 +85,18 @@ export async function downloadReplaysFromMatches(
     matchId = direction === 'forward' ? matchId + 1 : matchId - 1;
   }
   console.log(`Stopped: reached ${maxNulls} consecutive null/missing replies.`);
+  closeReplayAgent();
 }
+
+process.on('SIGINT', () => {
+  closeReplayAgent();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  closeReplayAgent();
+  process.exit(0);
+});
 
 const startMatchId = 4629710;
 const endMatchId = 4324892;

@@ -1,7 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { fetchReplayGz } from '../timerStats.js';
+import { closeReplayAgent, fetchReplayGz } from '../fetchReplayGz.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const USER_AGENT = process.env.USER_AGENT || null;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,7 +18,7 @@ const TOURNAMENTS_CACHE = (groupId) =>
 const TOURNAMENT_SCHEDULE_CACHE = (id) =>
   path.join(CACHE_DIR, `schedule_${id}.json`);
 
-export async function fetchGroupTournaments(groupId) {
+async function fetchGroupTournaments(groupId) {
   await fs.mkdir(CACHE_DIR, { recursive: true });
   const cachePath = TOURNAMENTS_CACHE(groupId);
 
@@ -26,7 +30,9 @@ export async function fetchGroupTournaments(groupId) {
   }
 
   const url = `https://fumbbl.com/api/group/tournaments/${groupId}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: USER_AGENT ? { 'User-Agent': USER_AGENT } : {},
+  });
   if (!res.ok) throw new Error(`Failed to fetch tournaments: ${res.status}`);
   const tournaments = await res.json();
 
@@ -34,7 +40,7 @@ export async function fetchGroupTournaments(groupId) {
   return tournaments;
 }
 
-export async function fetchTournamentSchedule(tournamentId) {
+async function fetchTournamentSchedule(tournamentId) {
   await fs.mkdir(CACHE_DIR, { recursive: true });
   const cachePath = TOURNAMENT_SCHEDULE_CACHE(tournamentId);
 
@@ -46,24 +52,26 @@ export async function fetchTournamentSchedule(tournamentId) {
   }
 
   const url = `https://fumbbl.com/api/tournament/schedule/${tournamentId}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: USER_AGENT ? { 'User-Agent': USER_AGENT } : {},
+  });
   if (!res.ok) throw new Error(`Failed to fetch schedule: ${res.status}`);
   const schedule = await res.json();
   await fs.writeFile(cachePath, JSON.stringify(schedule, null, 2), 'utf8');
   return schedule;
 }
 
-export function getTournamentIds(tournaments) {
+function getTournamentIds(tournaments) {
   return tournaments.map((t) => t.id);
 }
 
-export function extractReplayIdsFromSchedule(scheduleArr) {
+function extractReplayIdsFromSchedule(scheduleArr) {
   return scheduleArr
     .map((e) => e.result?.replayId)
     .filter((id) => typeof id === 'number' && id > 0);
 }
 
-export async function saveReplayIds(groupId, replayIds) {
+async function saveReplayIds(groupId, replayIds) {
   const dir = path.join(__dirname, '../data/groupReplays/replayIds');
   await fs.mkdir(dir, { recursive: true });
   const replayIdsPath = path.join(dir, `replayIds_${groupId}.json`);
@@ -71,7 +79,7 @@ export async function saveReplayIds(groupId, replayIds) {
   console.log(`Saved ${replayIds.length} replayIds to ${replayIdsPath}`);
 }
 
-export async function fetchAllReplayIdsForGroup(groupId) {
+async function fetchAllReplayIdsForGroup(groupId) {
   const tournaments = await fetchGroupTournaments(groupId);
   const tournamentIds = getTournamentIds(tournaments);
   console.log('Tournament IDs:', tournamentIds);
@@ -91,29 +99,33 @@ export async function fetchAllReplayIdsForGroup(groupId) {
   return allReplayIds;
 }
 
-export async function downloadAllReplays(replayIds) {
+async function downloadAllReplays(replayIds) {
   const replaysDir = path.join(__dirname, '../data/replays');
   await fs.mkdir(replaysDir, { recursive: true });
+
   for (let i = 0; i < replayIds.length; i++) {
     const replayId = replayIds[i];
     const gzPath = path.join(replaysDir, `replay_${replayId}.json.gz`);
-    const t0 = performance.now();
     try {
-      await fetchReplayGz(replayId, gzPath);
-      const t1 = performance.now();
-      console.log(
-        `Downloaded ${i + 1} of ${replayIds.length}: replay_${replayId}.json.gz | ${(t1 - t0).toFixed(2)} ms`,
-      );
+      const elapsed = await fetchReplayGz(replayId, gzPath, USER_AGENT, 1000);
+
+      if (elapsed !== false) {
+        console.log(
+          `Downloaded ${i + 1} of ${replayIds.length}: replay_${replayId}.json.gz | ${elapsed.toFixed(2)} ms`,
+        );
+      } else {
+        console.log(
+          `Skipped ${i + 1} of ${replayIds.length}: replay_${replayId}.json.gz already exists`,
+        );
+      }
     } catch (e) {
-      const t1 = performance.now();
-      console.error(
-        `Failed to download replay ${replayId} (${(t1 - t0).toFixed(2)} ms): ${e.message}`,
-      );
+      console.error(`Failed to download replay ${replayId}: ${e.message}`);
     }
   }
+  closeReplayAgent();
 }
 
-export async function loadReplayIds(groupId) {
+async function loadReplayIds(groupId) {
   const dir = path.join(__dirname, '../data/groupReplays/replayIds');
   const replayIdsPath = path.join(dir, `replayIds_${groupId}.json`);
   try {
@@ -130,7 +142,7 @@ export async function loadReplayIds(groupId) {
 // GDR: 17628
 // FDL: 14630
 // blackbox: 'blackbox'
-const groupId = 'blackbox';
+const groupId = 'nonBlackbox';
 
 //const replayIds = await fetchAllReplayIdsForGroup(groupId);
 //console.log(replayIds);

@@ -188,6 +188,32 @@ fumbblCommandProcessor.js         # Orchestrates per-frame processing
 
 ---
 
+## Responsible Usage
+
+When downloading replays from the FUMBBL API, please follow these best practices to keep the service healthy:
+
+- **Set a User-Agent** so FUMBBL administrators can identify your traffic.
+  - Create a `.env` file (see `.env.example`):
+
+    ```env
+    USER_AGENT="FFB-TimerStats/1.0 (Contact: YOURNAME)"
+    ```
+
+  - The module automatically uses this value.
+
+- **Use throttling (`minIntervalMs`) when running batch tools or multiple downloads.**
+  - This enforces a minimum delay between requests.
+  - Example:
+
+    ```js
+    await fetchReplayGz(replayId, gzPath, process.env.USER_AGENT, 1000); // 1 req/sec
+    ```
+
+  - For single replay analysis (`timerStats.js`), no throttle is needed.
+  - For bulk downloads, `1000` ms (1 request per second) is a safe recommended default.
+
+---
+
 ## Credits
 
 - **FUMBBL FFB Client:** [christerk/ffb](https://github.com/christerk/ffb)

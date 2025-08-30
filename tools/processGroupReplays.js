@@ -2,11 +2,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { timerStats } from '../timerStats.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const USER_AGENT = process.env.USER_AGENT || null;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function processGroupReplays(groupId) {
+async function processGroupReplays(groupId) {
   const replayIdsPath = path.join(
     __dirname,
     '../data/groupReplays/replayIds',
@@ -43,6 +47,7 @@ export async function processGroupReplays(groupId) {
         false, // log
         false, // turns
         true, // test
+        USER_AGENT,
       );
 
       if (tests !== true) {
@@ -90,4 +95,4 @@ export async function processGroupReplays(groupId) {
 // FDL: 14630
 // blackbox: 'blackbox'
 
-await processGroupReplays('blackbox');
+await processGroupReplays('nonBlackbox');
