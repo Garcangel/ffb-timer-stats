@@ -102,7 +102,7 @@ export async function timerStats(
       if (testResult === true) {
         //console.log('All tests passed.');
       } else {
-        console.log(`Test errors for replayId ${replayId}:`, testResult);
+        console.error(`Test errors for replayId ${replayId}:`, testResult);
       }
     }
 

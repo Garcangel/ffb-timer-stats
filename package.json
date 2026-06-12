@@ -5,7 +5,8 @@
   "description": "This module parses **FUMBBL FFB replays** (JSON command streams) to extract and analyze **turn-by-turn timing**, drive structure, and coach statistics for Blood Bowl games.",
   "main": "downloadReplay.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "stats": "node cli.js"
   },
   "keywords": [],
   "author": "",
@@ -23,3 +24,4 @@
     "prettier": "^3.6.2"
   }
 }
+
